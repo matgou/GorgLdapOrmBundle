@@ -1,0 +1,23 @@
+{
+    "name": "gorg/ldaporm-bundle",
+    "type": "symfony-bundle",
+    "description": "An Ldap ORM for Symfony2",
+    "keywords": ["gorg", "orm", "ldap"],
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Mathieu GOULIN",
+            "email": "mathieu.goulin@gadz.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+    },
+    "autoload": {
+        "psr-0": { "Gorg\\Bundle\\LdapOrmBundle": "" }
+    },
+    "minimum-stability": "dev",
+    "target-dir": "Gorg/bundle/LdapOrmBundle",
+    "extra": {
+    }
+}
