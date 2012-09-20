@@ -17,7 +17,7 @@
         "psr-0": { "Gorg\\Bundle\\LdapOrmBundle": "" }
     },
     "minimum-stability": "dev",
-    "target-dir": "Gorg/bundle/LdapOrmBundle",
+    "target-dir": "Gorg/Bundle/LdapOrmBundle",
     "extra": {
     }
 }
