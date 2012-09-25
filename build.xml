@@ -1,0 +1,72 @@
+<project name="gramApi" default="build">
+    <target name="clean">
+        <delete dir="${basedir}/build" />
+    </target>
+ 
+    <target name="prepare">
+        <mkdir dir="${basedir}/build/logs" />
+        <mkdir dir="${basedir}/build/codebrowser" />
+        <mkdir dir="${basedir}/build/coverage" />
+        <mkdir dir="${basedir}/build/cpd" />
+        <mkdir dir="${basedir}/build/dependencies" />
+    </target>
+ 
+    <target name="phpcs">
+        <exec dir="${basedir}" executable="phpcs" failonerror="false" output="/dev/null">
+            <arg line="--extensions=php --ignore=build,app,web,vendor,bin --standard=Symfony2 --tab-width=4 --report=checkstyle --report-file=${basedir}/build/logs/checkstyle.xml ." />
+        </exec>
+    </target>
+
+    <target name="phpcpd">
+        <exec dir="${basedir}" executable="phpcpd" failonerror="false">
+            <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml --exclude build,app,web,vendor,bin
+                       ." />
+        </exec>
+        <exec dir="${basedir}/build/logs" executable="xsltproc" failonerror="false" output="${basedir}/build/cpd/index.html">
+            <arg line="${basedir}/cpd.xsl ${basedir}/build/logs/pmd-cpd.xml" />
+        </exec>
+    </target>
+ 
+    <target name="pdepend">
+        <exec dir="${basedir}" executable="pdepend" failonerror="false">
+            <arg line="--jdepend-xml=${basedir}/build/logs/jdepend.xml
+                       --jdepend-chart=${basedir}/build/dependencies/jdepend.svg
+                       --overview-pyramid=${basedir}/build/dependencies/pyramid.svg
+                       --optimization=best
+                       --exclude=build,app,web,vendor,bin
+                       ." />
+        </exec>
+        <exec dir="${basedir}/build/dependencies" executable="cp" failonerror="false">
+            <arg line="${basedir}/dependencies.html index.html" />
+        </exec>
+    </target>
+ 
+    <target name="phpcb">
+        <exec dir="${basedir}" executable="phpcb" failonerror="false">
+            <arg line="--log ${basedir}/build/logs --source ${basedir}/src --output ${basedir}/build/codebrowser" />
+        </exec>
+    </target>
+ 
+    <target name="phpunit">
+        <exec dir="${basedir}" executable="phpunit" failonerror="true">
+            <arg line="-c app/ --log-junit ${basedir}/build/logs/phpunit.xml
+                       --coverage-clover ${basedir}/build/logs/clover.xml
+                       --coverage-html ${basedir}/build/coverage " />
+        </exec>
+    </target>
+
+    <target name="documentation">
+        <exec dir="${basedir}" executable="phpdoc" failonerror="true">
+            <arg line=" -d . -t build/docs" />
+        </exec>
+    </target>
+ 
+    <target name="parallel">
+        <parallel>
+            <antcall target="phpcs" />
+            <antcall target="phpcpd" />
+        </parallel>
+    </target>
+ 
+    <target name="build" depends="clean,prepare,parallel,phpcb,documentation" />
+</project>
