@@ -170,7 +170,16 @@ class LdapEntityManager
     {
         $arrayInstance= $this->entityToArray($instance);
         $dn = $this->buildEntityDn($instance);
+
+        // test if entity already exist
+        if(count($this->retrieveByDn($dn, get_class($instance), 1)) > 0)
+        {
+            $arrayInstance['objectClass'] = null;
+            $this->ldapUpdate($dn, array_filter($arrayInstance));
+            return;
+        }
         $this->ldapPersist($dn, $arrayInstance);
+        return;
     }
 
     /**
@@ -205,6 +214,49 @@ class LdapEntityManager
     {
         $this->logger->info('Insert into LDAP: ' . $dn);
         ldap_add($this->ldapResource, $dn, $arrayInstance);
+    }
+
+    /**
+     * Update an object in ldap with array
+     *
+     * @param unknown_type $dn
+     * @param array        $arrayInstance
+     */
+    private function ldapUpdate($dn, Array $arrayInstance)
+    {  
+        $this->logger->info('Modify in LDAP: ' . $dn);
+        print_r($arrayInstance);
+        ldap_modify($this->ldapResource, $dn, $arrayInstance);
+    }
+
+    /**
+     * retrieve object from dn
+     *
+     * @param string     $dn
+     * @param string     $entityName
+     * @param integer    $max
+     *
+     * @return array
+     */
+    public function retrieveByDn($dn, $entityName, $max = 100)
+    {  
+        $instanceMetadataCollection = $this->getClassMetadata($entityName);
+
+        $data = array();
+        $sr = ldap_search($this->ldapResource,
+            $dn,
+            '(ObjectClass=*)',
+            array_values($instanceMetadataCollection->getMetadatas()),
+            0
+        );
+        $infos = ldap_get_entries($this->ldapResource, $sr);
+        foreach ($infos as $entry) {
+            if(is_array($entry)) {
+                $data[] = $this->arrayToObject($entityName, $entry);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -253,4 +305,5 @@ class LdapEntityManager
         }
         return $entity;
     }
+
 }

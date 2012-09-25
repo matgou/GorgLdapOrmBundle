@@ -90,6 +90,7 @@ class Repository
                 $attribute => $value,
         ));
 
-        return $this->em->retrieve($filter, $this->entityName, 1);
+        $arrayOfEntity = $this->em->retrieve($filter, $this->entityName, 1);
+        return $arrayOfEntity[0];
     }
 }
