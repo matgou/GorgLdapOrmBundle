@@ -91,6 +91,10 @@ class Repository
         ));
 
         $arrayOfEntity = $this->em->retrieve($filter, $this->entityName, 1);
-        return $arrayOfEntity[0];
+        if(isset($arrayOfEntity[0]))
+        {
+            return $arrayOfEntity[0];
+        }
+        return null;
     }
 }
