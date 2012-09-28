@@ -285,7 +285,6 @@ class LdapEntityManager
                 $data[] = $this->arrayToObject($entityName, $entry);
             }
         }
-
         return $data;
     }
 
@@ -297,7 +296,7 @@ class LdapEntityManager
         foreach($instanceMetadataCollection->getMetadatas() as $varname => $attributes) {
             try {
                 $setter = 'set' . ucfirst($varname);
-                $entity->$setter($array[$attributes][0]);
+                $entity->$setter($array[strtolower($attributes)][0]);
             } catch (\Exception $e)
             {
 
