@@ -5,6 +5,8 @@ namespace Gorg\Bundle\LdapOrmBundle\Ldap;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Attribute;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\ObjectClass;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Dn;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnLinkArray;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Sequence;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
@@ -85,6 +87,14 @@ class LdapEntityManager
                     $attribute=$annotation->getName();
                     $instanceMetadataCollection->addMeta($varname, $attribute);
                 }
+                if ($annotation instanceof DnLinkArray) {
+                    $varname=$publicAttr->getName();
+                    $instanceMetadataCollection->addArrayOfLink($varname, $annotation->getValue());
+                }
+                if ($annotation instanceof Sequence) {
+                    $varname=$publicAttr->getName();
+                    $instanceMetadataCollection->addSequence($varname, $annotation->getValue());
+                }
             }
         }
 
@@ -116,6 +126,11 @@ class LdapEntityManager
         foreach($instanceMetadataCollection->getMetadatas() as $varname) {
             $getter = 'get' . ucfirst($instanceMetadataCollection->getKey($varname));
             $value=$instance->$getter();
+            if($value == null) {
+                if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
+                    $value = $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
+                }
+            }
             // Specificity of ldap (incopatibility with ldap boolean)
             if(is_bool($value)) {
                 if($value) {
@@ -212,7 +227,7 @@ class LdapEntityManager
      */
     private function ldapPersist($dn, Array $arrayInstance)
     {
-        $this->logger->info('Insert into LDAP: ' . $dn);
+        $this->logger->info('Insert into LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_add($this->ldapResource, $dn, $arrayInstance);
     }
 
@@ -243,19 +258,24 @@ class LdapEntityManager
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
-        $sr = ldap_search($this->ldapResource,
-            $dn,
-            '(ObjectClass=*)',
-            array_values($instanceMetadataCollection->getMetadatas()),
-            0
-        );
-        $infos = ldap_get_entries($this->ldapResource, $sr);
-        foreach ($infos as $entry) {
-            if(is_array($entry)) {
-                $data[] = $this->arrayToObject($entityName, $entry);
+        $this->logger->info('Search in LDAP: ' . $dn . ' query (ObjectClass=*)');
+        try {
+            $sr = ldap_search($this->ldapResource,
+                $dn,
+                '(ObjectClass=*)',
+                array_values($instanceMetadataCollection->getMetadatas()),
+                0
+            );
+            $infos = ldap_get_entries($this->ldapResource, $sr);
+            foreach ($infos as $entry) {
+                if(is_array($entry)) {
+                    $data[] = $this->arrayToObject($entityName, $entry);
+                }
             }
+        } catch(\Exception $e) {
+            $data = array();
         }
-
+ 
         return $data;
     }
 
@@ -294,15 +314,46 @@ class LdapEntityManager
         
         $entity = new $entityName();
         foreach($instanceMetadataCollection->getMetadatas() as $varname => $attributes) {
-            try {
-                $setter = 'set' . ucfirst($varname);
-                $entity->$setter($array[strtolower($attributes)][0]);
-            } catch (\Exception $e)
+            if($instanceMetadataCollection->isArrayOfLink($varname))
             {
+                $entityArray = array();
+                $linkArray = $array[strtolower($attributes)];
+                $count = $linkArray['count'];
+                for($i = 0; $i < $count; $i++) {
+                    if($linkArray[$i] != null) {
+                        $targetArray = $this->retrieveByDn($linkArray[$i], $instanceMetadataCollection->getArrayOfLinkClass($varname), 1);
+                        $entityArray[] = $targetArray[0];
+                    }
+                }
+                $setter = 'set' . ucfirst($varname);
+                $entity->$setter($entityArray);
+            } else {
+                try {
+                    $setter = 'set' . ucfirst($varname);
+                    $entity->$setter($array[strtolower($attributes)][0]);
+                } catch (\Exception $e)
+                {
 
-            }
+                }
+           }
         }
         return $entity;
     }
 
+    private function generateSequenceValue($dn)
+    {
+        $sr = ldap_search($this->ldapResource,
+            $dn,
+            '(objectClass=integerSequence)'
+        );
+        $infos = ldap_get_entries($this->ldapResource, $sr);
+        $sequence = $infos[0];
+        $return = $sequence['nextvalue'][0];
+        $newValue = $sequence['nextvalue'][0] + $sequence['increment'][0];
+        $entry = array(
+            'nextvalue' => array($newValue),
+        );
+        ldap_modify($this->ldapResource, $dn, $entry);
+        return $return;
+    }
 }
