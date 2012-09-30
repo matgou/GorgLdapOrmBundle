@@ -62,7 +62,10 @@ class LdapEntityManager
         $this->ldapResource = ldap_connect($this->host, $this->port);
         ldap_set_option($this->ldapResource, LDAP_OPT_PROTOCOL_VERSION, 3);
         $r = ldap_bind($this->ldapResource, $this->bindDN, $this->passwordDN);
-
+        if($r == null) {
+            throw new \Exception('Connexion impossible au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' ' . $this->passwordDN . '.');
+        }
+        $this->logger->info('Connexion au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' .');
         return $r;
     }
 
@@ -117,9 +120,11 @@ class LdapEntityManager
         $instanceMetadataCollection = $this->getClassMetadata($instance);
         $classAnnotations = $this->reader->getClassAnnotations($r);
 
+        $arrayInstance['objectClass'] = array('top');
+
         foreach ($classAnnotations as $classAnnotation) {
             if ($classAnnotation instanceof ObjectClass) {
-                $arrayInstance['objectClass'] = $classAnnotation->getValue();
+                array_push($arrayInstance['objectClass'], $classAnnotation->getValue());
             }
         }
 
@@ -128,7 +133,7 @@ class LdapEntityManager
             $value=$instance->$getter();
             if($value == null) {
                 if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
-                    $value = $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
+                    $value = (int) $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
                 }
             }
             // Specificity of ldap (incopatibility with ldap boolean)
@@ -240,7 +245,6 @@ class LdapEntityManager
     private function ldapUpdate($dn, Array $arrayInstance)
     {  
         $this->logger->info('Modify in LDAP: ' . $dn);
-        print_r($arrayInstance);
         ldap_modify($this->ldapResource, $dn, $arrayInstance);
     }
 
