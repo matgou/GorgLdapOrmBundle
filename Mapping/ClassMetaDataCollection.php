@@ -33,7 +33,7 @@ class ClassMetaDataCollection
     
     public function getMeta($key)
     {
-        if($this->metadatas[$key]) {
+        if(isset($this->metadatas[$key])) {
             return $this->metadatas[$key];
         }
         return null;
