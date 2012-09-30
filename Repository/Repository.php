@@ -45,10 +45,21 @@ class Repository
             case (0 === strpos($method, 'findBy')):
                 $by = lcfirst(substr($method, 6));
                 $method = 'findBy';
+		if($this->class->getMeta($by) == null) {
+                    if($this->class->isArrayOfLink($by . 's')  == null) {
+                        throw new \BadMethodCallException("No sutch ldap attribute $by in $this->entityName");
+                    } else {
+                        $by = $by . 's';
+                        $method = 'findInArray';
+                    }
+                }
                 break;
 
             case (0 === strpos($method, 'findOneBy')):
                 $by = lcfirst(substr($method, 9));
+                if($this->class->getMeta($by) == null) {
+                    throw new \BadMethodCallException("No sutch ldap attribute $by in $this->entityName");
+                }
                 $method = 'findOneBy';
                 break;
 
@@ -96,5 +107,21 @@ class Repository
             return $arrayOfEntity[0];
         }
         return null;
+    }
+
+    /**
+     * Return an object with corresponding varname as Criteria
+     * 
+     * @param unknown type $varname
+     * @param unknown_type $value
+     */
+    public function findInArray($varname, $value) {
+        $attribute = $this->class->getMeta($varname);
+        $dnToFind = $this->em->buildEntityDn($value);
+
+        $filter = new LdapFilter(array(
+                $attribute => $dnToFind,
+        ));
+        return $this->em->retrieve($filter, $this->entityName);
     }
 }

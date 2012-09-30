@@ -19,7 +19,10 @@ class ClassMetaDataCollection
 
     public function getKey($value) 
     {
-        return $this->reverseMetadatas[$value];
+        if(isset($this->reverseMetadatas[$value])) {
+            return $this->reverseMetadatas[$value];
+        }
+        return null;
     }
     
     public function addMeta($key, $value)
@@ -30,7 +33,10 @@ class ClassMetaDataCollection
     
     public function getMeta($key)
     {
-        return $this->metadatas[$key];
+        if($this->metadatas[$key]) {
+            return $this->metadatas[$key];
+        }
+        return null;
     }
     
     public function getMetadatas()
