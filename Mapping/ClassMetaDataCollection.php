@@ -9,12 +9,14 @@ class ClassMetaDataCollection
     public $name;
     public $arrayOfLink;
     public $sequences;
+    public $dnRegex;
 
     public function __construct()
     {
         $this->metadatas = array();
         $this->reverseMetadatas = array();
         $this->arrayOfLink = array();
+        $this->dnRegex = array();
     }
 
     public function getKey($value) 
@@ -77,5 +79,15 @@ class ClassMetaDataCollection
     public function getSequence($key)
     {
         return $this->sequence[$key];
+    }
+
+    public function addRegex($key, $regex)
+    {
+        $this->dnRegex[$key] = $regex;
+    }
+
+    public function getDnRegex()
+    {
+        return $this->dnRegex;
     }
 }

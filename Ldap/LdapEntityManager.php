@@ -7,6 +7,7 @@ use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\ObjectClass;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Dn;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnLinkArray;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Sequence;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnPregMatch;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
@@ -98,6 +99,10 @@ class LdapEntityManager
                     $varname=$publicAttr->getName();
                     $instanceMetadataCollection->addSequence($varname, $annotation->getValue());
                 }
+                if ($annotation instanceof DnPregMatch) {
+                    $varname=$publicAttr->getName();
+                    $instanceMetadataCollection->addRegex($varname, $annotation->getValue());
+                }
             }
         }
 
@@ -130,7 +135,7 @@ class LdapEntityManager
 
         foreach($instanceMetadataCollection->getMetadatas() as $varname) {
             $getter = 'get' . ucfirst($instanceMetadataCollection->getKey($varname));
-            $value=$instance->$getter();
+            $value  = $instance->$getter();
             if($value == null) {
                 if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
                     $value = (int) $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
@@ -353,6 +358,12 @@ class LdapEntityManager
                 }
            }
         }
+        foreach($instanceMetadataCollection->getDnRegex() as $varname => $regex) {
+            preg_match_all($regex, $array['dn'], $matches);
+            $setter = 'set' . ucfirst($varname);
+            $entity->$setter($matches[1]);
+        }
+
         return $entity;
     }
 
