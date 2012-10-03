@@ -203,6 +203,18 @@ class LdapEntityManager
     }
 
     /**
+     * Delete an instance in Ldap
+     * @param unknown_type $instance
+     */
+    public function delete($instance)
+    {  
+        $dn = $this->buildEntityDn($instance);
+        $this->logger->info('Delete in LDAP: ' . $dn );
+	ldap_delete($this->ldapResource, $dn);
+        return;
+    }
+
+    /**
      * Send entity to database
      */
     public function flush()
