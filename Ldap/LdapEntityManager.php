@@ -152,7 +152,18 @@ class LdapEntityManager
                     $value = "FALSE";
                 }
             }
-            $arrayInstance[$varname] = $value;
+
+            if(is_object($value)) {
+                $arrayInstance[$varname] = $this->buildEntityDn($value);
+            } elseif(is_array($value) && !empty($value) && is_object($value[0])) {
+                $valueArray = array();
+                foreach($value as $val) {
+                    $valueArray[] = $this->buildEntityDn($val);
+                }
+                $arrayInstance[$varname] = $valueArray;
+            } else {
+                $arrayInstance[$varname] = $value;
+            }
         }
 
         return $arrayInstance;
@@ -197,6 +208,7 @@ class LdapEntityManager
     public function persist($instance)
     {
         $arrayInstance= $this->entityToArray($instance);
+
         $dn = $this->buildEntityDn($instance);
 
         // test if entity already exist
