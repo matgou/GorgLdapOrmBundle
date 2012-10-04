@@ -135,10 +135,13 @@ class LdapEntityManager
 
         foreach($instanceMetadataCollection->getMetadatas() as $varname) {
             $getter = 'get' . ucfirst($instanceMetadataCollection->getKey($varname));
+            $setter = 'set' . ucfirst($instanceMetadataCollection->getKey($varname));
+
             $value  = $instance->$getter();
             if($value == null) {
                 if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
                     $value = (int) $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
+                    $instance->$setter($value);
                 }
             }
             // Specificity of ldap (incopatibility with ldap boolean)
