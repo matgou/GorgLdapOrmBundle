@@ -12,11 +12,13 @@
         <parameter key="gorg_ldap.root">%root%</parameter>
     
         <parameter key="gorg_ldap_orm.entity_manager.class">Gorg\Bundle\LdapOrmBundle\Ldap\LdapEntityManager</parameter>
+        <parameter key="gorg_ldap_orm.twig_extention.class">Gorg\Bundle\LdapOrmBundle\Twig\Extension\LdapFilter</parameter>
+
     </parameters>
 
     <services>
         <service id="gorg_ldap_orm.entity_manager" class="%gorg_ldap_orm.entity_manager.class%">
-			<argument type="service" id="logger" />
+            <argument type="service" id="logger" />
             <argument type="service" id="twig2" />
             <argument type="service" id="annotation_reader" />
             <argument>%gorg_ldap.host%</argument>

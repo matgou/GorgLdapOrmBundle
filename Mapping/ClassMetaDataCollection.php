@@ -6,6 +6,7 @@ namespace Gorg\Bundle\LdapOrmBundle\Mapping;
 class ClassMetaDataCollection
 {
     private $metadatas;
+    private $repository;
     public $name;
     public $arrayOfLink;
     public $sequences;
@@ -89,5 +90,15 @@ class ClassMetaDataCollection
     public function getDnRegex()
     {
         return $this->dnRegex;
+    }
+
+    public function getRepository()
+    {
+        return $this->repository;
+    }
+
+    public function setRepository($repository)
+    {
+        $this->repository = $repository;
     }
 }

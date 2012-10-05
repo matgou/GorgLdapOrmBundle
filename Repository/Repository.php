@@ -11,7 +11,7 @@ use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
  */
 class Repository
 {
-    private $em;
+    protected $em;
     private $class;
     private $entityName;
 

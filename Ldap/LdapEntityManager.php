@@ -8,6 +8,7 @@ use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Dn;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnLinkArray;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Sequence;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnPregMatch;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Repository as RepositoryAttribute;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
@@ -82,6 +83,13 @@ class LdapEntityManager
         $r = new \ReflectionClass($entityName);
         $instanceMetadataCollection = new ClassMetaDataCollection();
         $instanceMetadataCollection->name = $entityName;
+        $classAnnotations = $this->reader->getClassAnnotations($r);
+
+        foreach ($classAnnotations as $classAnnotation) {
+            if ($classAnnotation instanceof RepositoryAttribute) {
+                $instanceMetadataCollection->setRepository($classAnnotation->getValue());
+            }
+        }
 
         foreach ($r->getProperties() as $publicAttr) {
             $annotations = $this->reader->getPropertyAnnotations($publicAttr);
@@ -278,7 +286,10 @@ class LdapEntityManager
     public function getRepository($entityName)
     {
         $metadata = $this->getClassMetadata($entityName);
-
+        if($metadata->getRepository()) {
+            $repository = $metadata->getRepository();
+            return new $repository($this, $metadata);
+        }
         return new Repository($this, $metadata);
     }
 
