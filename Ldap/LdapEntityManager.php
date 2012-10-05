@@ -231,8 +231,33 @@ class LdapEntityManager
     {  
         $dn = $this->buildEntityDn($instance);
         $this->logger->info('Delete in LDAP: ' . $dn );
-	ldap_delete($this->ldapResource, $dn);
+	$this->deleteByDn($dn, true);
         return;
+    }
+
+    /**
+     * Delete an entry in ldap by Dn
+     * @param string $dn
+     */
+    public function deleteByDn($dn, $recursive=false)
+    {
+        if($recursive == false) {
+            return(ldap_delete($this->ldapResource, $dn));
+        } else {
+            //searching for sub entries
+            $sr=ldap_list($this->ldapResource, $dn, "ObjectClass=*", array(""));
+            $info = ldap_get_entries($this->ldapResource, $sr);
+
+            for($i = 0; $i < $info['count']; $i++) {
+                //deleting recursively sub entries
+                $result=$this->deleteByDn($info[$i]['dn'], true);
+                if(!$result) {
+                    //return result code, if delete fails
+                    return($result);
+                }
+            }
+            return(ldap_delete($this->ldapResource, $dn));
+        }
     }
 
     /**
