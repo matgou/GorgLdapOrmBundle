@@ -208,14 +208,15 @@ class LdapEntityManager
     public function persist($instance)
     {
         $arrayInstance= $this->entityToArray($instance);
+        $this->logger->info('to array : ' . serialize($arrayInstance));
 
         $dn = $this->buildEntityDn($instance);
 
         // test if entity already exist
         if(count($this->retrieveByDn($dn, get_class($instance), 1)) > 0)
         {
-            $arrayInstance['objectClass'] = null;
-            $this->ldapUpdate($dn, array_filter($arrayInstance));
+            unset($arrayInstance['objectClass']);
+            $this->ldapUpdate($dn, $arrayInstance);
             return;
         }
         $this->ldapPersist($dn, $arrayInstance);
@@ -276,7 +277,7 @@ class LdapEntityManager
      */
     private function ldapUpdate($dn, Array $arrayInstance)
     {  
-        $this->logger->info('Modify in LDAP: ' . $dn);
+        $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_modify($this->ldapResource, $dn, $arrayInstance);
     }
 
@@ -353,6 +354,9 @@ class LdapEntityManager
             if($instanceMetadataCollection->isArrayOfLink($varname))
             {
                 $entityArray = array();
+                if(!isset($array[strtolower($attributes)])) {
+                    $array[strtolower($attributes)] = array('count' => 0);
+                }
                 $linkArray = $array[strtolower($attributes)];
                 $count = $linkArray['count'];
                 for($i = 0; $i < $count; $i++) {
