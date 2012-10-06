@@ -8,6 +8,7 @@ use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Dn;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnLinkArray;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Sequence;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnPregMatch;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\ParentDn;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Repository as RepositoryAttribute;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
@@ -110,6 +111,10 @@ class LdapEntityManager
                 if ($annotation instanceof DnPregMatch) {
                     $varname=$publicAttr->getName();
                     $instanceMetadataCollection->addRegex($varname, $annotation->getValue());
+                }
+                if ($annotation instanceof ParentDn) {
+                    $varname=$publicAttr->getName();
+                    $instanceMetadataCollection->addParentLink($varname, $annotation->getValue());
                 }
             }
         }
@@ -249,6 +254,8 @@ class LdapEntityManager
      */
     public function deleteByDn($dn, $recursive=false)
     {
+        $this->logger->info('Delete (recursive=' . $recursive . ') in LDAP: ' . $dn );
+
         if($recursive == false) {
             return(ldap_delete($this->ldapResource, $dn));
         } else {
@@ -384,7 +391,8 @@ class LdapEntityManager
     private function arrayToObject($entityName, $array)
     {
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
-        
+       
+        $dn = $array['dn']; 
         $entity = new $entityName();
         foreach($instanceMetadataCollection->getMetadatas() as $varname => $attributes) {
             if($instanceMetadataCollection->isArrayOfLink($varname))
@@ -417,6 +425,16 @@ class LdapEntityManager
             preg_match_all($regex, $array['dn'], $matches);
             $setter = 'set' . ucfirst($varname);
             $entity->$setter($matches[1]);
+        }
+        if($dn != '') {
+            foreach($instanceMetadataCollection->getParentLink() as $varname => $parentClass) {
+                $setter = 'set' . ucfirst($varname);
+                $parentDn = preg_replace('/^[a-zA-Z0-9]*=[a-zA-Z0-9]*,/', '', $dn);
+                $link = $this->retrieveByDn($parentDn, $parentClass);
+                if(count($link) > 0) {
+                    $entity->$setter($link[0]);
+                }
+            }
         }
 
         return $entity;

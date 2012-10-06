@@ -11,13 +11,15 @@ class ClassMetaDataCollection
     public $arrayOfLink;
     public $sequences;
     public $dnRegex;
+    public $parentLink;
 
     public function __construct()
     {
-        $this->metadatas = array();
+        $this->metadatas        = array();
         $this->reverseMetadatas = array();
-        $this->arrayOfLink = array();
-        $this->dnRegex = array();
+        $this->arrayOfLink      = array();
+        $this->dnRegex          = array();
+        $this->parentLink       = array();
     }
 
     public function getKey($value) 
@@ -80,6 +82,16 @@ class ClassMetaDataCollection
     public function getSequence($key)
     {
         return $this->sequence[$key];
+    }
+
+    public function addParentLink($key, $dn)
+    {  
+        $this->parentLink[$key] = $dn;
+    }
+
+    public function getParentLink()
+    {  
+        return $this->parentLink;
     }
 
     public function addRegex($key, $regex)
