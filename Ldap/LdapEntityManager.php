@@ -333,7 +333,7 @@ class LdapEntityManager
      *
      * @return array
      */
-    public function retrieveByDn($dn, $entityName, $max = 100)
+    public function retrieveByDn($dn, $entityName, $max = 100, $objectClass = "*")
     {  
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
@@ -342,7 +342,7 @@ class LdapEntityManager
         try {
             $sr = ldap_search($this->ldapResource,
                 $dn,
-                '(ObjectClass=*)',
+                '(ObjectClass=' . $objectClass . ')',
                 array_values($instanceMetadataCollection->getMetadatas()),
                 0
             );
