@@ -176,7 +176,8 @@ class LdapEntityManager
                 $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
                 $hash = pack("H*", $value);
-                $arrayInstance[$varname] = '{SHA}' . base64_encode($value);
+                $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
+                $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
             } else {
                 $arrayInstance[$varname] = $value;
             }
