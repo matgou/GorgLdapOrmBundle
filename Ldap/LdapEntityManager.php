@@ -174,6 +174,9 @@ class LdapEntityManager
                     $valueArray[] = $this->buildEntityDn($val);
                 }
                 $arrayInstance[$varname] = $valueArray;
+            } elseif(strtolower($varname) == "userpassword") {
+                $hash = pack("H*", $value);
+                $arrayInstance[$varname] = '{SHA}' . base64_encode($value);
             } else {
                 $arrayInstance[$varname] = $value;
             }
@@ -414,7 +417,13 @@ class LdapEntityManager
             } else {
                 try {
                     $setter = 'set' . ucfirst($varname);
-                    $entity->$setter($array[strtolower($attributes)][0]);
+                    if(strtolower($attributes) == "userpassword") {
+                        $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
+                        $string = base64_decode($value);
+                        $entity->$setter($string);
+                    } else {
+                        $entity->$setter($array[strtolower($attributes)][0]);
+                    }
                 } catch (\Exception $e)
                 {
 
