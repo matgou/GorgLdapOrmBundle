@@ -13,6 +13,7 @@ use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Repository as RepositoryAttribute;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
+use Gorg\Bundle\LdapOrmBundle\Ldap\Converter;
 use Doctrine\Common\Annotations\Reader;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -167,7 +168,12 @@ class LdapEntityManager
             }
 
             if(is_object($value)) {
-                $arrayInstance[$varname] = $this->buildEntityDn($value);
+                if($value instanceof \DateTime)
+                {
+                    $arrayInstance[$varname] = Converter::toLdapDateTime($value, false);
+                } else {
+                    $arrayInstance[$varname] = $this->buildEntityDn($value);
+                }
             } elseif(is_array($value) && !empty($value) && is_object($value[0])) {
                 $valueArray = array();
                 foreach($value as $val) {
@@ -422,6 +428,9 @@ class LdapEntityManager
                         $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
                         $string = base64_decode($value);
                         $entity->$setter($string);
+                    } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
+                        $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
+                        $entity->$setter($datetime);
                     } else {
                         $entity->$setter($array[strtolower($attributes)][0]);
                     }
