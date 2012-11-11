@@ -91,6 +91,9 @@ class LdapEntityManager
             if ($classAnnotation instanceof RepositoryAttribute) {
                 $instanceMetadataCollection->setRepository($classAnnotation->getValue());
             }
+            if ($classAnnotation instanceof ObjectClass) {
+                $instanceMetadataCollection->setObjectClass($classAnnotation->getValue());
+            }
         }
 
         foreach ($r->getProperties() as $publicAttr) {
@@ -181,9 +184,11 @@ class LdapEntityManager
                 }
                 $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
-                $hash = pack("H*", $value);
-                $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
-                $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                if($this->isSha1($value)) {
+                    $hash = pack("H*", $value);
+                    $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
+                    $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                }
             } else {
                 $arrayInstance[$varname] = $value;
             }
@@ -390,6 +395,7 @@ class LdapEntityManager
             0
         );
         $infos = ldap_get_entries($this->ldapResource, $sr);
+
         foreach ($infos as $entry) {
             if(is_array($entry)) {
                 $data[] = $this->arrayToObject($entityName, $entry);
@@ -474,5 +480,9 @@ class LdapEntityManager
         );
         ldap_modify($this->ldapResource, $dn, $entry);
         return $return;
+    }
+
+    private function isSha1($str) {
+        return (bool) preg_match('/^[0-9a-f]{40}$/i', $str);
     }
 }

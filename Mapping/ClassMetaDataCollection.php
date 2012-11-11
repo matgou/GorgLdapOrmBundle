@@ -12,6 +12,7 @@ class ClassMetaDataCollection
     public $sequences;
     public $dnRegex;
     public $parentLink;
+    public $objectClass;
 
     public function __construct()
     {
@@ -20,6 +21,14 @@ class ClassMetaDataCollection
         $this->arrayOfLink      = array();
         $this->dnRegex          = array();
         $this->parentLink       = array();
+    }
+
+    public function setObjectClass($objectClass) {
+        $this->objectClass = $objectClass;
+    }
+
+    public function getObjectClass() {
+        return $this->objectClass;
     }
 
     public function getKey($value) 

@@ -74,6 +74,19 @@ class Repository
     }
 
     /**
+     * Return list of object 
+     * 
+     */
+    public function findAll()
+    {  
+        $filter = new LdapFilter(array(
+            'objectClass' => $this->class->getObjectClass(),
+        ));
+        return $this->em->retrieve($filter, $this->entityName);
+    }
+
+
+    /**
      * Return list of object with corresponding varname as Criteria
      * 
      * @param unknown type $varname

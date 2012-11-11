@@ -25,6 +25,9 @@ class LdapFilter
 			$returnString .= '('  . $key . '=' . $value . ')';
 		}
                 $returnString .= $sufix;
+                if($returnString == null) {
+                    $returnString="objectclass=*";
+                }
 		return $returnString;
 	}
 }
