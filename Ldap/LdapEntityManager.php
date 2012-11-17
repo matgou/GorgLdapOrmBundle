@@ -433,7 +433,7 @@ class LdapEntityManager
                     if(strtolower($attributes) == "userpassword") {
                         $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
                         $string = base64_decode($value);
-                        $entity->$setter($string);
+                        $entity->$setter(bin2hex($string));
                     } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
                         $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
                         $entity->$setter($datetime);
