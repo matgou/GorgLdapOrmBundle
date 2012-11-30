@@ -13,6 +13,7 @@ class ClassMetaDataCollection
     public $dnRegex;
     public $parentLink;
     public $objectClass;
+    public $arrayField;
 
     public function __construct()
     {
@@ -21,6 +22,21 @@ class ClassMetaDataCollection
         $this->arrayOfLink      = array();
         $this->dnRegex          = array();
         $this->parentLink       = array();
+        $this->arrayField       = array();
+    }
+
+    public function addArrayField($fieldName)
+    {
+        $this->arrayField[$fieldName] = true;
+    }
+
+    public function isArrayField($fieldName)
+    {
+        if(isset($this->arrayField[$fieldName])) {
+            return $this->arrayField[$fieldName];
+        }
+
+        return false;
     }
 
     public function setObjectClass($objectClass) {

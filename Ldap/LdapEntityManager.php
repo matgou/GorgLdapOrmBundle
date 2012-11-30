@@ -10,6 +10,7 @@ use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Sequence;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\DnPregMatch;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\ParentDn;
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Repository as RepositoryAttribute;
+use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\ArrayField;
 use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
@@ -119,6 +120,9 @@ class LdapEntityManager
                 if ($annotation instanceof ParentDn) {
                     $varname=$publicAttr->getName();
                     $instanceMetadataCollection->addParentLink($varname, $annotation->getValue());
+                }
+                if ($annotation instanceof ArrayField) {
+                    $instanceMetadataCollection->addArrayField($varname);
                 }
             }
         }
@@ -437,6 +441,9 @@ class LdapEntityManager
                     } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
                         $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
                         $entity->$setter($datetime);
+                    } elseif ($instanceMetadataCollection->isArrayField($varname)) {
+                        unset($array[strtolower($attributes)]["count"]);
+                        $entity->$setter($array[strtolower($attributes)]);
                     } else {
                         $entity->$setter($array[strtolower($attributes)][0]);
                     }
