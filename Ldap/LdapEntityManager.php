@@ -432,6 +432,9 @@ class LdapEntityManager
                 $setter = 'set' . ucfirst($varname);
                 $entity->$setter($entityArray);
             } else {
+                if (!isset($array[strtolower($attributes)])) {
+                    continue; // Inutile de continuer si l'attribut n'existe pas dans les données lues
+                }
                 try {
                     $setter = 'set' . ucfirst($varname);
                     if(strtolower($attributes) == "userpassword") {
