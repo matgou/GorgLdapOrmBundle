@@ -149,7 +149,7 @@ class LdapEntityManager
         $arrayInstance['objectClass'] = array('top');
 
         foreach ($classAnnotations as $classAnnotation) {
-            if ($classAnnotation instanceof ObjectClasss && ($classAnnotationValue = $classAnnotation->getValue()) !== '' ) {
+            if ($classAnnotation instanceof ObjectClass && ($classAnnotationValue = $classAnnotation->getValue()) !== '' ) {
                 array_push($arrayInstance['objectClass'], $classAnnotationValue);
             }
         }
