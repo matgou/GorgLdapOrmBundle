@@ -149,8 +149,8 @@ class LdapEntityManager
         $arrayInstance['objectClass'] = array('top');
 
         foreach ($classAnnotations as $classAnnotation) {
-            if ($classAnnotation instanceof ObjectClass) {
-                array_push($arrayInstance['objectClass'], $classAnnotation->getValue());
+            if ($classAnnotation instanceof ObjectClasss && ($classAnnotationValue = $classAnnotation->getValue()) !== '' ) {
+                array_push($arrayInstance['objectClass'], $classAnnotationValue);
             }
         }
 
@@ -221,9 +221,11 @@ class LdapEntityManager
         $instanceMetadataCollection = new ClassMetaDataCollection();
         $classAnnotations = $this->reader->getClassAnnotations($r);
 
+        $dnModel = '';
         foreach ($classAnnotations as $classAnnotation) {
             if ($classAnnotation instanceof Dn) {
                 $dnModel = $classAnnotation->getValue();
+                break;
             }
         }
 
