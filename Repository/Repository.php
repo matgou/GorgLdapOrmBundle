@@ -101,6 +101,22 @@ class Repository
         return $this->em->retrieve($filter, $this->entityName);
     }
 
+
+    /**
+     * Return list of objects with corresponding criteria with or operators
+     *
+     * @param unknown type $array
+     */
+    public function findByOr(Array $array)
+    {
+        $ldapAttributes = array();
+        foreach($array as $varname => $value) {
+            $ldapAttributes[$this->class->getMeta($varname)] = $value;
+        }
+        $filter = new LdapFilter($ldapAttributes, "OR");
+        return $this->em->retrieve($filter, $this->entityName);
+    }
+
     /**
      * Return an object with corresponding varname as Criteria
      * 

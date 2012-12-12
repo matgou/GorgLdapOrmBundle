@@ -193,7 +193,7 @@ class LdapEntityManager
                     $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
                     $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
                 }
-            } else {
+            }  else {
                 $arrayInstance[$varname] = $value;
             }
         }
