@@ -15,6 +15,7 @@ use Gorg\Bundle\LdapOrmBundle\Mapping\ClassMetaDataCollection;
 use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Converter;
+use Gorg\Bundle\LdapOrmBundle\Components\GenericIterator;
 use Doctrine\Common\Annotations\Reader;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -33,6 +34,8 @@ class LdapEntityManager
 
     private $ldapResource;
     private $reader;
+    
+    private $iterator = Null;
 
     /**
      * Build the Entity Manager service
@@ -409,6 +412,13 @@ class LdapEntityManager
         }
         return $data;
     }
+    
+    public function getIterator(LdapFilter $filter, $entityName) {
+        if (empty($this->iterator)) {
+            $this->iterator = new LdapIterator($filter, $entityName, $this);
+        }
+        return $this->iterator;
+    }
 
     private function arrayToObject($entityName, $array)
     {
@@ -497,4 +507,61 @@ class LdapEntityManager
     private function isSha1($str) {
         return (bool) preg_match('/^[0-9a-f]{40}$/i', $str);
     }
+}
+
+
+class LdapIterator implements \GenericIterator
+{
+    private $resource;
+    private $result;
+    private $pos;
+    private $total;
+
+    public function __construct (LdapFilter $filter, $entityName, LdapEntityManager $entityManager) {
+        $instanceMetadataCollection = $entityManager->getClassMetadata($entityName);
+
+        $this->resource = $entityManager->ldapResource;
+        $this->result = ldap_search($this->resource,
+            $entityManager->rootDN,
+            $filter->format('ldap'),
+            array_values($instanceMetadataCollection->getMetadatas()),
+            0
+        );
+        $this->pos    = 0;
+        $this->total  = ldap_count_entries($this->resource, $this->result);
+    }
+ 
+    /** Put the position to the first element of the Iteration and returns it.
+     */
+    public function first() {
+        if ($this->result === false) return false;
+        $this->pos = 0;
+        return ldap_first_entry($this->resource, $this->result);
+    }
+
+    /** True if the current element is the first element.
+     */
+    public function isFirst() {
+        return ($this->pos === 0);
+    }
+    
+    /** True if the current element is the last element.
+     */
+    public function isLast() {
+        return ($this->pos === $this->total-1);
+    }
+
+    /** Return the number of element of the iterator.
+     */
+    public function total() {
+        return $this->total;
+    }
+
+    public function next() {
+        if ($this->pos == 0) return $this->first();
+        if ($this->result === false) return false;
+        $this->pos++;
+        return ldap_next_entry($this->resource, $this->result);
+    }
+    
 }

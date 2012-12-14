@@ -11,7 +11,7 @@ use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
  */
 class Repository
 {
-    protected $em;
+    protected $em, $it;
     private $class;
     private $entityName;
 
@@ -72,33 +72,102 @@ class Repository
 
         return $this->$method($by,$arguments[0]);
     }
+    
+    /**
+     * Returns an Ldap filters, generic (ie : all) if no argument given
+     * or with an attribute and its value specified
+     *
+     * Also saves previously used filters objects to prevent excessive memory footprint usage
+     * 
+     * @param type $varname
+     * @param type $value
+     * @return \Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter 
+     */
+    private function getFilter($varname = false, $value = false) {
+        static $allFilters = array();
+        if ($varname === false) {
+            $attribute = 'objectClass';
+            $value = $this->class->getObjectClass();
+        }
+        else {
+            $attribute = $this->class->getMeta($varname);
+        }
+        if (!isset($allFilters[$key = base64_encode($attribute . $value)])) {
+            $allFilters[$key] = new LdapFilter(array($attribute => $value));
+        }
+        return $allFilters[$key];
+    }
 
     /**
-     * Return list of object 
+     * Returns list of object 
      * 
      */
     public function findAll()
     {  
-        $filter = new LdapFilter(array(
-            'objectClass' => $this->class->getObjectClass(),
-        ));
-        return $this->em->retrieve($filter, $this->entityName);
+        return $this->em->retrieve($this->getFilter(), $this->entityName);
+    }
+    
+    /**
+     * Uses the new Iterator in LdapEntityManager to return the first element of a search
+     * 
+     * Returns false if there are no more objects in the iterator
+     */            
+    public function itFindFirst($varname=false, $value=false) {
+        if (empty($this->it)) {
+            $this->it = $this->em->getIterator($this->getFilter($varname, $value), $this->entityName);
+        }
+        return $this->it->first();
     }
 
+    /**
+     * Uses the new Iterator in LdapEntityManager to return the next element of a search
+     * 
+     * Returns false if there are no more objects in the iterator
+     */            
+    public function itGetNext($varname=false, $value=false) {
+        if (empty($this->it)) {
+            $this->it = $this->em->getIterator($this->getFilter($varname, $value), $this->entityName);
+        }
+        return $this->it->next();
+    }
 
     /**
-     * Return list of object with corresponding varname as Criteria
+     * Verify that we are at the beggining of the iterator
+     *
+     * @return boolean 
+     */
+    public function itBegins() {
+        return isset($this->it) ? $this->it->isFirst() : false;
+    }
+
+    /**
+     * Verify that we are at the end of the iterator
+     *
+     * @return boolean 
+     */
+    public function itEnds() {
+        return isset($this->it) ? $this->it->isLast() : false;
+    }
+    
+    /**
+     * Removes an iterator 
+     */
+    public function itReset() {
+        unset($this->it);
+    }
+
+    /**
+     * Returns list of object with corresponding varname as Criteria
      * 
      * @param unknown type $varname
      * @param unknown_type $value
      */
     public function findBy($varname, $value)
     {
-        $attribute = $this->class->getMeta($varname);
-        $filter = new LdapFilter(array(
-                $attribute => $value,
-        ));
-        return $this->em->retrieve($filter, $this->entityName);
+        return $this->em->retrieve(
+            $this->getFilter($varname, $value),
+            $this->entityName
+        );
     }
 
     /**
@@ -109,12 +178,7 @@ class Repository
      */
     public function findOneBy($varname, $value)
     {
-        $attribute = $this->class->getMeta($varname);
-        $filter = new LdapFilter(array(
-                $attribute => $value,
-        ));
-
-        $arrayOfEntity = $this->em->retrieve($filter, $this->entityName, 1);
+        $arrayOfEntity = $this->em->retrieve($this->getFilter($varname, $value), $this->entityName, 1);
         if(isset($arrayOfEntity[0]))
         {
             return $arrayOfEntity[0];
@@ -129,12 +193,6 @@ class Repository
      * @param unknown_type $value
      */
     public function findInArray($varname, $value) {
-        $attribute = $this->class->getMeta($varname);
-        $dnToFind = $this->em->buildEntityDn($value);
-
-        $filter = new LdapFilter(array(
-                $attribute => $dnToFind,
-        ));
-        return $this->em->retrieve($filter, $this->entityName);
+        return $this->em->retrieve($this->getFilter($varname, $this->em->buildEntityDn($value)), $this->entityName);
     }
 }
