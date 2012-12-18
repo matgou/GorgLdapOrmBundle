@@ -43,7 +43,7 @@
  
     <target name="phpcb">
         <exec dir="${basedir}" executable="phpcb" failonerror="false">
-            <arg line="--log ${basedir}/build/logs --source ${basedir}/src --output ${basedir}/build/codebrowser" />
+            <arg line="--log ${basedir}/build/logs --source ${basedir} --output ${basedir}/build/codebrowser" />
         </exec>
     </target>
  
