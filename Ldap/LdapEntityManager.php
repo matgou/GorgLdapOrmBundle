@@ -161,7 +161,13 @@ class LdapEntityManager
             $value  = $instance->$getter();
             if($value == null) {
                 if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
-                    $value = (int) $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
+
+                    $sequence = $this->renderString($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)), array(
+                        'entity' => $instance,
+                        'rootDN' => $this->rootDN,
+                    ));
+
+                    $value = (int) $this->generateSequenceValue($sequence);
                     $instance->$setter($value);
                 }
             }
