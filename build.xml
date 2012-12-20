@@ -9,6 +9,7 @@
         <mkdir dir="${basedir}/build/coverage" />
         <mkdir dir="${basedir}/build/cpd" />
         <mkdir dir="${basedir}/build/dependencies" />
+        <mkdir dir="${basedir}/build/phpmd" />
     </target>
  
     <target name="phpcs">
@@ -19,11 +20,16 @@
 
     <target name="phpcpd">
         <exec dir="${basedir}" executable="phpcpd" failonerror="false">
-            <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml --exclude build --exclude app --exclude web --exclude vendor --exclude bin --exclude Tests .
-                       ." />
+            <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml --exclude build --exclude vendor --exclude Tests ." />
         </exec>
         <exec dir="${basedir}/build/logs" executable="xsltproc" failonerror="false" output="${basedir}/build/cpd/index.html">
             <arg line="${basedir}/cpd.xsl ${basedir}/build/logs/pmd-cpd.xml" />
+        </exec>
+    </target>
+
+    <target name="phpmd">
+        <exec dir="${basedir}" executable="phpmd" failonerror="false">
+            <arg line="--exclude build,vendor,Tests --reportfile build/phpmd/index.html . html codesize,unusedcode,naming" />
         </exec>
     </target>
  
@@ -68,5 +74,5 @@
         </parallel>
     </target>
  
-    <target name="build" depends="clean,prepare,parallel,phpcb,phpunit,documentation" />
+    <target name="build" depends="clean,prepare,parallel,phpcb,phpmd,phpunit,documentation" />
 </project>
