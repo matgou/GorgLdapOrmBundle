@@ -91,7 +91,7 @@
     <h1><a name="top">JDepend Analysis</a></h1>
     <p align="right">Designed for use with <a href="http://www.clarkware.com/software/JDepend.html">JDepend</a> and <a href="http://jakarta.apache.org">Ant</a>.</p>
     <hr size="2" />
-    <img src="pdepend.svg" /><img src="pyramid.svg" /><br />
+    <img src="jdepend.svg" /><img src="pyramid.svg" /><br />
 
     <table width="100%"><tr><td>
     <a name="NVsummary"><h2>Summary</h2></a>
