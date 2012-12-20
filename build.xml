@@ -38,7 +38,7 @@
             <arg line="--jdepend-xml=build/logs/jdepend.xml
                        --jdepend-chart=build/dependencies/jdepend.svg
                        --overview-pyramid=build/dependencies/pyramid.svg
-                       --exclude=build,vendor,Tests
+                       --ignore=build,vendor,Tests
                        ." />
         </exec>
         <exec dir="${basedir}/build/dependencies" executable="xsltproc" failonerror="false" output="${basedir}/build/dependencies/index.html">
