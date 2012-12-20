@@ -35,15 +35,14 @@
  
     <target name="pdepend">
         <exec dir="${basedir}" executable="pdepend" failonerror="false">
-            <arg line="--jdepend-xml=${basedir}/build/logs/jdepend.xml
-                       --jdepend-chart=${basedir}/build/dependencies/jdepend.svg
-                       --overview-pyramid=${basedir}/build/dependencies/pyramid.svg
-                       --optimization=best
+            <arg line="--jdepend-xml=build/logs/jdepend.xml
+                       --jdepend-chart=build/dependencies/jdepend.svg
+                       --overview-pyramid=build/dependencies/pyramid.svg
                        --exclude=build,vendor,Tests
                        ." />
         </exec>
-        <exec dir="${basedir}/build/dependencies" executable="cp" failonerror="false">
-            <arg line="${basedir}/dependencies.html index.html" />
+        <exec dir="${basedir}/build/dependencies" executable="xsltproc" failonerror="false" output="${basedir}/build/dependencies/index.html">
+            <arg line="${basedir}/pdepend.xsl ${basedir}/build/logs/jdepend.xml" />
         </exec>
     </target>
  
