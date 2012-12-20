@@ -66,12 +66,5 @@
         </exec>
     </target>
  
-    <target name="parallel">
-        <parallel>
-            <antcall target="phpcs" />
-            <antcall target="phpcpd" />
-        </parallel>
-    </target>
- 
-    <target name="build" depends="clean,prepare,parallel,phpcb,phpmd,phpunit,documentation" />
+    <target name="build" depends="clean,prepare,phpcs,phpcpd,pdepend,phpcb,phpmd,phpunit,documentation" />
 </project>
