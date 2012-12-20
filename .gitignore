@@ -2,3 +2,8 @@
 /nbproject/private/
 build/
 vendor/
+composer.lock
+
+# Bamboo Files
+build-number.txt
+log
