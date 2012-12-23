@@ -25,11 +25,11 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LdapEntityManager
 {
-    private $host       = "";
-    private $port       = "";
+    private $uri        = "";
     private $bindDN     = "";
-    private $passwordDN = "";
-    private $rootDN     = "";
+    private $password   = "";
+    private $baseDN     = "";
+    private $useTLS     = FALSE;
 
     private $ldapResource;
     private $reader;
@@ -39,22 +39,19 @@ class LdapEntityManager
      *
      * @param Twig_Environment $twig
      * @param Reader           $reader
-     * @param string           $host
-     * @param string           $port
-     * @param string           $bindDN
-     * @param string           $passwordDN
+     * @param array            $config
      */
-    public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $host, $port, $bindDN, $passwordDN, $rootDN)
+    public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $config)
     {
-      $this->logger     = $logger;
-      $this->twig       = $twig;
-      $this->host       = $host;
-      $this->port       = intval($port);
-      $this->bindDN     = $bindDN;
-      $this->passwordDN = $passwordDN;
-      $this->rootDN     = $rootDN;
-      $this->reader     = $reader;
-      $this->connect();
+        $this->logger     = $logger;
+        $this->twig       = $twig;
+        $this->uri        = $config['connection']['uri'];
+        $this->bindDN     = $config['connection']['bind_dn'];
+        $this->password   = $config['connection']['password'];
+        $this->baseDN     = $config['ldap']['base_dn'];
+        $this->useTLS     = $config['connection']['use_tls'];
+        $this->reader     = $reader;
+        $this->connect();
     }
 
     /**
@@ -64,13 +61,23 @@ class LdapEntityManager
      */
     private function connect()
     {
-        $this->ldapResource = ldap_connect($this->host, $this->port);
+        $this->ldapResource = ldap_connect($this->uri);
         ldap_set_option($this->ldapResource, LDAP_OPT_PROTOCOL_VERSION, 3);
-        $r = ldap_bind($this->ldapResource, $this->bindDN, $this->passwordDN);
-        if($r == null) {
-            throw new \Exception('Connexion impossible au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' ' . $this->passwordDN . '.');
+
+        // Switch to TLS, if configured
+        if ($this->useTLS) {
+            $tlsStatus = ldap_start_tls($this->ldapResource);
+            if (!$tlsStatus) {
+                throw new \Exception('Unable to enable TLS for LDAP connection.');
+            }
+            $this->logger->info('TLS enabled for LDAP connection.');
         }
-        $this->logger->info('Connexion au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' .');
+
+        $r = ldap_bind($this->ldapResource, $this->bindDN, $this->password);
+        if($r == null) {
+            throw new \Exception('Connexion impossible au serveur ldap ' . $this-uri . ' avec l\'utilisateur ' . $this->bindDN . ' ' . $this->password . '.');
+        }
+        $this->logger->info('Connexion au serveur ldap ' . $this->uri . ' avec l\'utilisateur ' . $this->bindDN . ' .');
         return $r;
     }
 
@@ -231,7 +238,7 @@ class LdapEntityManager
 
         return $this->renderString($dnModel, array(
                 'entity' => $instance,
-                'rootDN' => $this->rootDN,
+                'baseDN' => $this->baseDN,
                 ));
     }
 
@@ -395,7 +402,7 @@ class LdapEntityManager
 
         $data = array();
         $sr = ldap_search($this->ldapResource,
-            $this->rootDN,
+            $this->baseDN,
             $filter->format('ldap'),
             array_values($instanceMetadataCollection->getMetadatas()),
             0
