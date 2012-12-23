@@ -51,7 +51,6 @@ class LdapEntityManager
         $this->baseDN     = $config['ldap']['base_dn'];
         $this->useTLS     = $config['connection']['use_tls'];
         $this->reader     = $reader;
-        $this->connect();
     }
 
     /**
@@ -61,6 +60,11 @@ class LdapEntityManager
      */
     private function connect()
     {
+        // Don't permit multiple connect() calls to run
+        if ($this->ldapResource) {
+            return;
+        }
+
         $this->ldapResource = ldap_connect($this->uri);
         ldap_set_option($this->ldapResource, LDAP_OPT_PROTOCOL_VERSION, 3);
 
@@ -282,6 +286,9 @@ class LdapEntityManager
      */
     public function deleteByDn($dn, $recursive=false)
     {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Delete (recursive=' . $recursive . ') in LDAP: ' . $dn );
 
         if($recursive == false) {
@@ -336,6 +343,9 @@ class LdapEntityManager
      */
     private function ldapPersist($dn, Array $arrayInstance)
     {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Insert into LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_add($this->ldapResource, $dn, $arrayInstance);
     }
@@ -347,7 +357,10 @@ class LdapEntityManager
      * @param array        $arrayInstance
      */
     private function ldapUpdate($dn, Array $arrayInstance)
-    {  
+    {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_modify($this->ldapResource, $dn, $arrayInstance);
     }
@@ -362,7 +375,10 @@ class LdapEntityManager
      * @return array
      */
     public function retrieveByDn($dn, $entityName, $max = 100, $objectClass = "*")
-    {  
+    {
+        // Connect if needed
+        $this->connect();
+
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
@@ -398,6 +414,9 @@ class LdapEntityManager
      */
     public function retrieve(LdapFilter $filter, $entityName, $max = 100)
     {
+        // Connect if needed
+        $this->connect();
+
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
@@ -486,6 +505,9 @@ class LdapEntityManager
 
     private function generateSequenceValue($dn)
     {
+        // Connect if needed
+        $this->connect();
+
         $sr = ldap_search($this->ldapResource,
             $dn,
             '(objectClass=integerSequence)'
