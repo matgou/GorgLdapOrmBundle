@@ -194,10 +194,12 @@ class LdapEntityManager
                 }
                 $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
-                if($this->isSha1($value)) {
-                    $hash = pack("H*", $value);
-                    $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
-                    $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                if(!is_array($value)) {
+                    if($this->isSha1($value)) {
+                        $hash = pack("H*", $value);
+                        $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
+                        $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                    }
                 }
             }  else {
                 $arrayInstance[$varname] = $value;
@@ -400,6 +402,7 @@ class LdapEntityManager
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
+        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->rootDN, $filter->format('ldap')));
         $sr = ldap_search($this->ldapResource,
             $this->rootDN,
             $filter->format('ldap'),
@@ -446,9 +449,19 @@ class LdapEntityManager
                 try {
                     $setter = 'set' . ucfirst($varname);
                     if(strtolower($attributes) == "userpassword") {
-                        $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
-                        $string = base64_decode($value);
-                        $entity->$setter(bin2hex($string));
+                        if(count($array[strtolower($attributes)]) > 2) {
+                            unset($array[strtolower($attributes)]["count"]);
+                            $password = array();
+                            foreach($array[strtolower($attributes)] as $value) {
+                                $string = base64_decode($value);
+                                $password[] = bin2hex($string);
+                            }
+                            $entity->$setter($password);
+                        } else {
+                            $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
+                            $string = base64_decode($value);
+                            $entity->$setter(bin2hex($string));
+                        }
                     } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
                         $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
                         $entity->$setter($datetime);
