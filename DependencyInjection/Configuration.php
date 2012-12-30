@@ -38,13 +38,22 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('gorg_ldap_orm');
+
         $rootNode
             ->children()
-                ->scalarNode('host')->end()
-                ->scalarNode('port')->end()
-                ->scalarNode('user')->end()
-                ->scalarNode('passwd')->end()
-                ->scalarNode('root')->end()
+                ->arrayNode('connection')->isRequired()
+                    ->children()
+                        ->scalarNode('uri')->isRequired()->cannotBeEmpty()->end()
+                        ->booleanNode('use_tls')->defaultFalse()->end()
+                        ->scalarNode('bind_dn')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('password')->isRequired()->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
+                ->arrayNode('ldap')->isRequired()
+                    ->children()
+                        ->scalarNode('base_dn')->isRequired()->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

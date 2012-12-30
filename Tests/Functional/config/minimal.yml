@@ -1,0 +1,16 @@
+# Minimal configuration for testing
+framework:
+    router:
+        resource: "%kernel.root_dir%/Tests/Functional/config/routing.yml"
+
+    secret: secretValue
+    translator: { fallback: en }
+    templating: { engines: ['twig'] }
+
+gorg_ldap_orm:
+    connection:
+        uri: ldap://host.testcompany.com
+        bind_dn: cn=testuser,dc=testcompany,dc=com
+        password: testPassword
+    ldap:
+        base_dn: dc=testcompany,dc=com

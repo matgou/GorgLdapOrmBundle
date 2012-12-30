@@ -9,47 +9,52 @@
         <mkdir dir="${basedir}/build/coverage" />
         <mkdir dir="${basedir}/build/cpd" />
         <mkdir dir="${basedir}/build/dependencies" />
+        <mkdir dir="${basedir}/build/phpmd" />
     </target>
  
     <target name="phpcs">
         <exec dir="${basedir}" executable="phpcs" failonerror="false" output="/dev/null">
-            <arg line="--extensions=php --ignore=build,app,web,vendor,bin --standard=Symfony2 --tab-width=4 --report=checkstyle --report-file=${basedir}/build/logs/checkstyle.xml ." />
+            <arg line="--extensions=php --ignore=build,vendor,Tests --standard=Symfony2 --tab-width=4 --report=checkstyle --report-file=${basedir}/build/logs/checkstyle.xml ." />
         </exec>
     </target>
 
     <target name="phpcpd">
         <exec dir="${basedir}" executable="phpcpd" failonerror="false">
-            <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml --exclude build,app,web,vendor,bin
-                       ." />
+            <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml --exclude build --exclude vendor --exclude Tests ." />
         </exec>
         <exec dir="${basedir}/build/logs" executable="xsltproc" failonerror="false" output="${basedir}/build/cpd/index.html">
             <arg line="${basedir}/cpd.xsl ${basedir}/build/logs/pmd-cpd.xml" />
         </exec>
     </target>
+
+    <target name="phpmd">
+        <exec dir="${basedir}" executable="phpmd" failonerror="false">
+            <arg line="--exclude build,vendor,Tests --reportfile build/phpmd/index.html . html codesize,unusedcode,naming" />
+        </exec>
+    </target>
  
     <target name="pdepend">
         <exec dir="${basedir}" executable="pdepend" failonerror="false">
-            <arg line="--jdepend-xml=${basedir}/build/logs/jdepend.xml
-                       --jdepend-chart=${basedir}/build/dependencies/jdepend.svg
-                       --overview-pyramid=${basedir}/build/dependencies/pyramid.svg
-                       --optimization=best
-                       --exclude=build,app,web,vendor,bin
+            <arg line="--jdepend-xml=build/logs/jdepend.xml
+                       --jdepend-chart=build/dependencies/jdepend.svg
+                       --overview-pyramid=build/dependencies/pyramid.svg
+                       --ignore=build,vendor,Tests
                        ." />
         </exec>
-        <exec dir="${basedir}/build/dependencies" executable="cp" failonerror="false">
-            <arg line="${basedir}/dependencies.html index.html" />
+        <exec dir="${basedir}/build/dependencies" executable="xsltproc" failonerror="false" output="${basedir}/build/dependencies/index.html">
+            <arg line="${basedir}/pdepend.xsl ${basedir}/build/logs/jdepend.xml" />
         </exec>
     </target>
  
     <target name="phpcb">
         <exec dir="${basedir}" executable="phpcb" failonerror="false">
-            <arg line="--log ${basedir}/build/logs --source ${basedir}/src --output ${basedir}/build/codebrowser" />
+            <arg line="--log ${basedir}/build/logs --source ${basedir} --output ${basedir}/build/codebrowser" />
         </exec>
     </target>
  
     <target name="phpunit">
         <exec dir="${basedir}" executable="phpunit" failonerror="true">
-            <arg line="-c app/ --log-junit ${basedir}/build/logs/phpunit.xml
+            <arg line="-c . --log-junit ${basedir}/build/logs/phpunit.xml
                        --coverage-clover ${basedir}/build/logs/clover.xml
                        --coverage-html ${basedir}/build/coverage " />
         </exec>
@@ -57,16 +62,9 @@
 
     <target name="documentation">
         <exec dir="${basedir}" executable="phpdoc" failonerror="true">
-            <arg line=" -d . -t build/docs" />
+            <arg line=" -d . -i Tests/,vendor/,build -t build/docs" />
         </exec>
     </target>
  
-    <target name="parallel">
-        <parallel>
-            <antcall target="phpcs" />
-            <antcall target="phpcpd" />
-        </parallel>
-    </target>
- 
-    <target name="build" depends="clean,prepare,parallel,phpcb,documentation" />
+    <target name="build" depends="clean,prepare,phpcs,phpcpd,pdepend,phpcb,phpmd,phpunit,documentation" />
 </project>

@@ -41,11 +41,8 @@ class GorgLdapOrmExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('host', $config['host']);
-        $container->setParameter('port', $config['port']);
-        $container->setParameter('user', $config['user']);
-        $container->setParameter('passwd', $config['passwd']);
-        $container->setParameter('root', $config['root']);
+        // Make the configuration available as a parameter
+        $container->setParameter('gorg_ldap_orm.config', $config);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
