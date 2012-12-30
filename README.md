@@ -14,7 +14,6 @@ Installation
         ```json
            {
                "require": {
-                   "r1pp3rj4ck/TwigstringBundle": "master",
                    "gorg/ldaporm-bundle": "dev-master",
                }
            }
@@ -27,7 +26,7 @@ Installation
         {
             return array(
                 // ...
-    			new LK\TwigstringBundle\LKTwigstringBundle(),
+                new LK\TwigstringBundle\LKTwigstringBundle(),
                 new Gorg\Bundle\LdapOrmBundle\GorgLdapOrmBundle(),
                 // ...
             );

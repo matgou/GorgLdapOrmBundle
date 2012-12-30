@@ -7,6 +7,8 @@ framework:
     translator: { fallback: en }
     templating: { engines: ['twig'] }
 
+lk_twigstring: ~
+
 gorg_ldap_orm:
     connection:
         uri: ldap://host.testcompany.com

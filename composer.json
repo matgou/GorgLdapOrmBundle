@@ -18,7 +18,8 @@
         "symfony/class-loader": "2.1.*",
         "symfony/yaml": "2.1.*",
         "symfony/monolog-bundle": "2.1.*",
-        "symfony/twig-bundle": "2.1.*"
+        "symfony/twig-bundle": "2.1.*",
+        "r1pp3rj4ck/TwigstringBundle": "master"
     },
     "autoload": {
         "psr-0": { "Gorg\\Bundle\\LdapOrmBundle": "" }

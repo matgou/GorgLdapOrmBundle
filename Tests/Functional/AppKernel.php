@@ -9,7 +9,8 @@ class AppKernel extends Kernel {
 		return array (
 			new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
 			new \Symfony\Bundle\MonologBundle\MonologBundle(),
-			new \Symfony\Bundle\TwigBundle\TwigBundle(),
+                        new \Symfony\Bundle\TwigBundle\TwigBundle(),
+    			new \LK\TwigstringBundle\LKTwigstringBundle(),
 			new \Gorg\Bundle\LdapOrmBundle\GorgLdapOrmBundle(),
 		);
 	}
