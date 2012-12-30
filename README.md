@@ -38,11 +38,13 @@ Installation
     
         ``` yaml
         gorg_ldap_orm:
-            host: ldap://ldap.exemple.com
-            port: 389
-            user: cn=admin,dc=exemple,dc=com
-            passwd: exemplePassword
-            root: dc=exemple,dc=com
+            connection:
+                uri: ldap://ldap.exemple.com
+                use_tls: false
+                bind_dn: cn=admin,dc=exemple,dc=com
+                password: exemplePassword
+            ldap:
+                base_dn: dc=exemple,dc=com
         ```
 
 Documentation
@@ -65,7 +67,7 @@ To use the ldapOrmBundle you have to add annotation in entity like this exemple 
      * 
      * @author Mathieu GOULIN <mathieu.goulin@gadz.org>
      * @ObjectClass("Account")
-     * @Dn("hruid={{ entity.uid }},{% for entite in entity.entities %}ou={{ entite }},{% endfor %}{{ rootDN }}")
+     * @Dn("hruid={{ entity.uid }},{% for entite in entity.entities %}ou={{ entite }},{% endfor %}{{ baseDN }}")
      */
     class Account
     {
