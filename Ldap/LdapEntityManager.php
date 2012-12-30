@@ -194,7 +194,7 @@ class LdapEntityManager
 
                     $sequence = $this->renderString($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)), array(
                         'entity' => $instance,
-                        'rootDN' => $this->rootDN,
+                        'baseDN' => $this->baseDN,
                     ));
 
                     $value = (int) $this->generateSequenceValue($sequence);
@@ -447,7 +447,7 @@ class LdapEntityManager
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
-        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->rootDN, $filter->format('ldap')));
+        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->baseDN, $filter->format('ldap')));
         $sr = ldap_search($this->ldapResource,
             $this->baseDN,
             $filter->format('ldap'),

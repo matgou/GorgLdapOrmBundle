@@ -32,7 +32,7 @@
     <services>
         <service id="gorg_ldap_orm.entity_manager" class="%gorg_ldap_orm.entity_manager.class%">
             <argument type="service" id="logger" />
-            <argument type="service" id="twig" />
+            <argument type="service" id="twig2" />
             <argument type="service" id="annotation_reader" />
             <argument>%gorg_ldap_orm.config%</argument>
         </service>
