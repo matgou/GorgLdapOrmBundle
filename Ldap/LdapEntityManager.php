@@ -217,12 +217,16 @@ class LdapEntityManager
                 } else {
                     $arrayInstance[$varname] = $this->buildEntityDn($value);
                 }
-            } elseif(is_array($value) && !empty($value) && is_object($value[0])) {
-                $valueArray = array();
-                foreach($value as $val) {
-                    $valueArray[] = $this->buildEntityDn($val);
+            } elseif(is_array($value)) {
+                if(isset($value[0])) {
+                    if(is_object($value[0])) {
+                        $valueArray = array();
+                        foreach($value as $val) {
+                            $valueArray[] = $this->buildEntityDn($val);
+                        }
+                        $arrayInstance[$varname] = $valueArray;
+                    }
                 }
-                $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
                 if(!is_array($value)) {
                     if($this->isSha1($value)) {
