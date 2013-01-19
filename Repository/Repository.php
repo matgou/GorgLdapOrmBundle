@@ -116,6 +116,7 @@ class Repository
         $attribute = $this->class->getMeta($varname);
         $filter = new LdapFilter(array(
                 $attribute => $value,
+                'objectClass' => $this->class->getObjectClass(),
         ));
         return $this->em->retrieve($filter, $this->entityName);
     }
@@ -147,6 +148,7 @@ class Repository
         $attribute = $this->class->getMeta($varname);
         $filter = new LdapFilter(array(
                 $attribute => $value,
+                'objectClass' => $this->class->getObjectClass(),
         ));
 
         $arrayOfEntity = $this->em->retrieve($filter, $this->entityName, 1);
