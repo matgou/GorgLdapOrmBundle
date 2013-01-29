@@ -52,6 +52,7 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('ldap')->isRequired()
                     ->children()
                         ->scalarNode('base_dn')->isRequired()->cannotBeEmpty()->end()
+			->scalarNode('password_type')->isRequired()->cannotBeEmpty()->end()
                     ->end()
                 ->end()
             ->end();

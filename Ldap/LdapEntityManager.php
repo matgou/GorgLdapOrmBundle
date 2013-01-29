@@ -44,11 +44,12 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LdapEntityManager
 {
-    private $uri        = "";
-    private $bindDN     = "";
-    private $password   = "";
-    private $baseDN     = "";
-    private $useTLS     = FALSE;
+    private $uri        	= "";
+    private $bindDN     	= "";
+    private $password   	= "";
+    private $baseDN     	= "";
+    private $passwordType 	= "";
+    private $useTLS     	= FALSE;
 
     private $ldapResource;
     private $reader;
@@ -62,14 +63,15 @@ class LdapEntityManager
      */
     public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $config)
     {
-        $this->logger     = $logger;
-        $this->twig       = $twig;
-        $this->uri        = $config['connection']['uri'];
-        $this->bindDN     = $config['connection']['bind_dn'];
-        $this->password   = $config['connection']['password'];
-        $this->baseDN     = $config['ldap']['base_dn'];
-        $this->useTLS     = $config['connection']['use_tls'];
-        $this->reader     = $reader;
+        $this->logger     	= $logger;
+        $this->twig       	= $twig;
+        $this->uri        	= $config['connection']['uri'];
+        $this->bindDN     	= $config['connection']['bind_dn'];
+        $this->password   	= $config['connection']['password'];
+        $this->baseDN     	= $config['ldap']['base_dn'];
+	$this->passwordType 	= $config['ldap']['password_type'];
+        $this->useTLS     	= $config['connection']['use_tls'];
+        $this->reader     	= $reader;
     }
 
     /**
@@ -225,11 +227,13 @@ class LdapEntityManager
                     $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
                 if(!is_array($value)) {
-                    if($this->isSha1($value)) {
+                    if($this->isSha1($value) && $this->passwordType == "sha1") {
                         $hash = pack("H*", $value);
                         $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
                         $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
-                    }
+                    } elseif ($this->passwordType == 'plaintext' {
+			$arrayInstance[$varname] = $value;
+		    }
                 }
             }  else {
                 $arrayInstance[$varname] = $value;
