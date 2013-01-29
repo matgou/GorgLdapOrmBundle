@@ -44,7 +44,9 @@ Installation
                 password: exemplePassword
             ldap:
                 base_dn: dc=exemple,dc=com
+                password_type: sha1
         ```
+    Sha1 is the default hashing method. In some cases (such as OpenLdap) the password is hashed server-side, if this is the case then change ```pasword_type``` to ```plaintext```
 
 Basic Usage
 -----------
