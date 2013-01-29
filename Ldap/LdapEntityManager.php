@@ -44,11 +44,12 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LdapEntityManager
 {
-    private $uri        = "";
-    private $bindDN     = "";
-    private $password   = "";
-    private $baseDN     = "";
-    private $useTLS     = FALSE;
+    private $uri        	= "";
+    private $bindDN     	= "";
+    private $password   	= "";
+    private $baseDN     	= "";
+    private $passwordType 	= "";
+    private $useTLS     	= FALSE;
 
     private $ldapResource;
     private $reader;
@@ -62,15 +63,15 @@ class LdapEntityManager
      */
     public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $config)
     {
-        $this->logger     = $logger;
-        $this->twig       = $twig;
-        $this->uri        = $config['connection']['uri'];
-        $this->bindDN     = $config['connection']['bind_dn'];
-        $this->password   = $config['connection']['password'];
-        $this->baseDN     = $config['ldap']['base_dn'];
-	$this->passwordType = $config['ldap']['password_type'];
-        $this->useTLS     = $config['connection']['use_tls'];
-        $this->reader     = $reader;
+        $this->logger     	= $logger;
+        $this->twig       	= $twig;
+        $this->uri        	= $config['connection']['uri'];
+        $this->bindDN     	= $config['connection']['bind_dn'];
+        $this->password   	= $config['connection']['password'];
+        $this->baseDN     	= $config['ldap']['base_dn'];
+	$this->passwordType 	= $config['ldap']['password_type'];
+        $this->useTLS     	= $config['connection']['use_tls'];
+        $this->reader     	= $reader;
     }
 
     /**
