@@ -68,6 +68,7 @@ class LdapEntityManager
         $this->bindDN     = $config['connection']['bind_dn'];
         $this->password   = $config['connection']['password'];
         $this->baseDN     = $config['ldap']['base_dn'];
+	$this->passwordType = $config['ldap']['password_type'];
         $this->useTLS     = $config['connection']['use_tls'];
         $this->reader     = $reader;
     }
@@ -225,11 +226,13 @@ class LdapEntityManager
                     $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
                 if(!is_array($value)) {
-                    if($this->isSha1($value)) {
+                    if($this->isSha1($value) && $this->passwordType == "sha1") {
                         $hash = pack("H*", $value);
                         $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
                         $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
-                    }
+                    } elseif ($this->passwordType == 'plaintext' {
+			$arrayInstance[$varname] = $value;
+		    }
                 }
             }  else {
                 $arrayInstance[$varname] = $value;
