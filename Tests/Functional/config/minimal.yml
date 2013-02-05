@@ -16,3 +16,4 @@ gorg_ldap_orm:
         password: testPassword
     ldap:
         base_dn: dc=testcompany,dc=com
+        password_type: sha1

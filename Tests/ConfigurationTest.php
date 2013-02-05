@@ -31,6 +31,7 @@ class ConfigurationTest extends PHPUnit_Framework_TestCase {
 			),
 			'ldap' => array (
 				'base_dn' => 'dc=testcompany,dc=com',
+                                'password_type' => 'sha1',
 			),
 		);
 
