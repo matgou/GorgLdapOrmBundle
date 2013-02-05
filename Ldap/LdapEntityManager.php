@@ -116,7 +116,7 @@ class LdapEntityManager
      * 
      * @return ClassMetaDataCollection
      */
-    private function getClassMetadata($entityName)
+    public function getClassMetadata($entityName)
     {
         $r = new \ReflectionClass($entityName);
         $instanceMetadataCollection = new ClassMetaDataCollection();
@@ -234,7 +234,7 @@ class LdapEntityManager
                         $hash = pack("H*", $value);
                         $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
                         $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
-                    } elseif ($this->passwordType == 'plaintext' {
+                    } elseif ($this->passwordType == 'plaintext') {
 			$arrayInstance[$varname] = $value;
 		    }
                 }
@@ -437,6 +437,44 @@ class LdapEntityManager
         return $data;
     }
 
+    public function doRawLdapGetDn($rawResult)
+    {
+        return ldap_get_dn($this->ldapResource, $rawResult);
+    }
+
+    public function doRawLdapGetAttributes($rawResult)
+    {
+        return ldap_get_attributes($this->ldapResource, $rawResult);
+    }
+
+    public function doRawLdapCountEntries($rawResult)
+    {
+        return ldap_count_entries($this->ldapResource, $rawResult);
+    }
+
+    public function doRawLdapFirstEntry($rawResult)
+    {
+        return ldap_first_entry($this->ldapResource, $rawResult);
+    }
+
+    public function doRawLdapNextEntry($rawResult)
+    {
+        return ldap_next_entry($this->ldapResource, $rawResult);
+    }
+
+    public function doRawLdapSearch($rawFilter, $attributes, $count)
+    {
+        // Connect if needed
+        $this->connect();
+        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->baseDN, $rawFilter));
+
+        return ldap_search($this->ldapResource,
+            $this->baseDN,
+            $rawFilter,
+            $attributes,
+            $count);
+    }
+
     /**
      * retrieve hruid array from a filter
      * 
@@ -448,15 +486,10 @@ class LdapEntityManager
      */
     public function retrieve(LdapFilter $filter, $entityName, $max = 100)
     {
-        // Connect if needed
-        $this->connect();
-
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
-        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->baseDN, $filter->format('ldap')));
-        $sr = ldap_search($this->ldapResource,
-            $this->baseDN,
+        $sr = $this->doRawLdapSearch(
             $filter->format('ldap'),
             array_values($instanceMetadataCollection->getMetadatas()),
             0
@@ -478,7 +511,7 @@ class LdapEntityManager
         return $this->iterator;
     }
 
-    private function arrayToObject($entityName, $array)
+    public function arrayToObject($entityName, $array)
     {
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
        
@@ -580,59 +613,3 @@ class LdapEntityManager
     }
 }
 
-
-class LdapIterator implements \GenericIterator
-{
-    private $resource;
-    private $result;
-    private $pos;
-    private $total;
-
-    public function __construct (LdapFilter $filter, $entityName, LdapEntityManager $entityManager) {
-        $instanceMetadataCollection = $entityManager->getClassMetadata($entityName);
-
-        $this->resource = $entityManager->ldapResource;
-        $this->result = ldap_search($this->resource,
-            $entityManager->rootDN,
-            $filter->format('ldap'),
-            array_values($instanceMetadataCollection->getMetadatas()),
-            0
-        );
-        $this->pos    = 0;
-        $this->total  = ldap_count_entries($this->resource, $this->result);
-    }
- 
-    /** Put the position to the first element of the Iteration and returns it.
-     */
-    public function first() {
-        if ($this->result === false) return false;
-        $this->pos = 0;
-        return ldap_first_entry($this->resource, $this->result);
-    }
-
-    /** True if the current element is the first element.
-     */
-    public function isFirst() {
-        return ($this->pos === 0);
-    }
-    
-    /** True if the current element is the last element.
-     */
-    public function isLast() {
-        return ($this->pos === $this->total-1);
-    }
-
-    /** Return the number of element of the iterator.
-     */
-    public function total() {
-        return $this->total;
-    }
-
-    public function next() {
-        if ($this->pos == 0) return $this->first();
-        if ($this->result === false) return false;
-        $this->pos++;
-        return ldap_next_entry($this->resource, $this->result);
-    }
-    
-}
