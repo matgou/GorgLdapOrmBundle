@@ -396,7 +396,7 @@ class LdapEntityManager
         $this->connect();
 
         $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
-        ldap_modify($this->ldapResource, $dn, $arrayInstance);
+        ldap_modify($this->ldapResource, $dn, array_filter($arrayInstance, 'is_scalar'));
     }
 
     /**
@@ -521,10 +521,10 @@ class LdapEntityManager
             if($instanceMetadataCollection->isArrayOfLink($varname))
             {
                 $entityArray = array();
-                if(!isset($array[strtolower($attributes)])) {
-                    $array[strtolower($attributes)] = array('count' => 0);
+                if(!isset($array[$attributes])) {
+                    $array[$attributes] = array('count' => 0);
                 }
-                $linkArray = $array[strtolower($attributes)];
+                $linkArray = $array[$attributes];
                 $count = $linkArray['count'];
                 for($i = 0; $i < $count; $i++) {
                     if($linkArray[$i] != null) {
@@ -535,37 +535,36 @@ class LdapEntityManager
                 $setter = 'set' . ucfirst($varname);
                 $entity->$setter($entityArray);
             } else {
-                if (!isset($array[strtolower($attributes)])) {
-                    continue; // Inutile de continuer si l'attribut n'existe pas dans les données lues
+                if (!isset($array[$attributes])) {
+                    continue; // Don't set the atribute if not exit
                 }
                 try {
                     $setter = 'set' . ucfirst($varname);
                     if(strtolower($attributes) == "userpassword") {
-                        if(count($array[strtolower($attributes)]) > 2) {
-                            unset($array[strtolower($attributes)]["count"]);
+                        if(count($array[$attributes]) > 2) {
+                            unset($array[$attributes]["count"]);
                             $password = array();
-                            foreach($array[strtolower($attributes)] as $value) {
+                            foreach($array[$attributes] as $value) {
                                 $string = base64_decode($value);
                                 $password[] = bin2hex($string);
                             }
                             $entity->$setter($password);
                         } else {
-                            $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
+                            $value = str_replace("{SHA}", "", $array[$attributes][0]);
                             $string = base64_decode($value);
                             $entity->$setter(bin2hex($string));
                         }
-                    } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
-                        $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
+                    } elseif(preg_match('/^\d{14}/', $array[$attributes][0])) {
+                        $datetime = Converter::fromLdapDateTime($array[$attributes][0], false);
                         $entity->$setter($datetime);
                     } elseif ($instanceMetadataCollection->isArrayField($varname)) {
-                        unset($array[strtolower($attributes)]["count"]);
-                        $entity->$setter($array[strtolower($attributes)]);
+                        unset($array[$attributes]["count"]);
+                        $entity->$setter($array[$attributes]);
                     } else {
-                        $entity->$setter($array[strtolower($attributes)][0]);
+                        $entity->$setter($array[$attributes][0]);
                     }
-                } catch (\Exception $e)
-                {
-
+                } catch (\Exception $e) {
+                    $this->logger->err(sprintf("Exception in ldap to entity mapping : %s", $e->getMessage()));
                 }
            }
         }

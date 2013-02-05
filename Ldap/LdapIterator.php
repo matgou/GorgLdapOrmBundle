@@ -52,7 +52,6 @@ class LdapIterator implements \Iterator
     private function init()
     {
         $instanceMetadataCollection = $this->entityManager->getClassMetadata($this->entityName);
-
         $this->result = $this->entityManager->doRawLdapSearch(
             $this->filter->format('ldap'),
             array_values($instanceMetadataCollection->getMetadatas()),
@@ -62,8 +61,10 @@ class LdapIterator implements \Iterator
             $this->pos    = 0;
             $this->total  = $this->entityManager->doRawLdapCountEntries($this->result);
             $this->currentElement = $this->entityManager->doRawLdapFirstEntry($this->result);
+
             return true;
         } else {
+
             return false;
         }
     }
@@ -152,6 +153,7 @@ class LdapIterator implements \Iterator
 
         $data = $this->entityManager->doRawLdapGetAttributes($this->currentElement);
         $data['dn'] = $this->entityManager->doRawLdapGetDn($this->currentElement);
+
         return $this->entityManager->arrayToObject($this->entityName, 
             $data
         );
