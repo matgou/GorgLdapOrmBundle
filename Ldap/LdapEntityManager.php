@@ -396,7 +396,7 @@ class LdapEntityManager
         $this->connect();
 
         $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
-        ldap_modify($this->ldapResource, $dn, array_filter($arrayInstance, 'is_scalar'));
+        ldap_modify($this->ldapResource, $dn, array_filter($arrayInstance, function ($element) { return is_scalar($element) || is_array($element); } ));
     }
 
     /**
