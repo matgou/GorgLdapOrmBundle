@@ -1,5 +1,24 @@
 <?php
-
+/***************************************************************************
+ * Copyright (C) 1999-2012 Gadz.org                                        *
+ * http://opensource.gadz.org/                                             *
+ *                                                                         *
+ * This program is free software; you can redistribute it and/or modify    *
+ * it under the terms of the GNU General Public License as published by    *
+ * the Free Software Foundation; either version 2 of the License, or       *
+ * (at your option) any later version.                                     *
+ *                                                                         *
+ * This program is distributed in the hope that it will be useful,         *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+ * GNU General Public License for more details.                            *
+ *                                                                         *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program; if not, write to the Free Software             *
+ * Foundation, Inc.,                                                       *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                   *
+ ***************************************************************************/
+ 
 namespace Gorg\Bundle\LdapOrmBundle\Ldap;
 
 use Gorg\Bundle\LdapOrmBundle\Annotation\Ldap\Attribute;
@@ -26,11 +45,11 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class LdapEntityManager
 {
-    private $host       = "";
-    private $port       = "";
+    private $uri        = "";
     private $bindDN     = "";
-    private $passwordDN = "";
-    private $rootDN     = "";
+    private $password   = "";
+    private $baseDN     = "";
+    private $useTLS     = FALSE;
 
     private $ldapResource;
     private $reader;
@@ -42,22 +61,18 @@ class LdapEntityManager
      *
      * @param Twig_Environment $twig
      * @param Reader           $reader
-     * @param string           $host
-     * @param string           $port
-     * @param string           $bindDN
-     * @param string           $passwordDN
+     * @param array            $config
      */
-    public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $host, $port, $bindDN, $passwordDN, $rootDN)
+    public function __construct(Logger $logger, \Twig_Environment $twig, Reader $reader, $config)
     {
-      $this->logger     = $logger;
-      $this->twig       = $twig;
-      $this->host       = $host;
-      $this->port       = intval($port);
-      $this->bindDN     = $bindDN;
-      $this->passwordDN = $passwordDN;
-      $this->rootDN     = $rootDN;
-      $this->reader     = $reader;
-      $this->connect();
+        $this->logger     = $logger;
+        $this->twig       = $twig;
+        $this->uri        = $config['connection']['uri'];
+        $this->bindDN     = $config['connection']['bind_dn'];
+        $this->password   = $config['connection']['password'];
+        $this->baseDN     = $config['ldap']['base_dn'];
+        $this->useTLS     = $config['connection']['use_tls'];
+        $this->reader     = $reader;
     }
 
     /**
@@ -67,13 +82,28 @@ class LdapEntityManager
      */
     private function connect()
     {
-        $this->ldapResource = ldap_connect($this->host, $this->port);
-        ldap_set_option($this->ldapResource, LDAP_OPT_PROTOCOL_VERSION, 3);
-        $r = ldap_bind($this->ldapResource, $this->bindDN, $this->passwordDN);
-        if($r == null) {
-            throw new \Exception('Connexion impossible au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' ' . $this->passwordDN . '.');
+        // Don't permit multiple connect() calls to run
+        if ($this->ldapResource) {
+            return;
         }
-        $this->logger->info('Connexion au serveur ldap ' . $this->host . ':' . $this->port . ' avec l\'utilisateur ' . $this->bindDN . ' .');
+
+        $this->ldapResource = ldap_connect($this->uri);
+        ldap_set_option($this->ldapResource, LDAP_OPT_PROTOCOL_VERSION, 3);
+
+        // Switch to TLS, if configured
+        if ($this->useTLS) {
+            $tlsStatus = ldap_start_tls($this->ldapResource);
+            if (!$tlsStatus) {
+                throw new \Exception('Unable to enable TLS for LDAP connection.');
+            }
+            $this->logger->info('TLS enabled for LDAP connection.');
+        }
+
+        $r = ldap_bind($this->ldapResource, $this->bindDN, $this->password);
+        if($r == null) {
+            throw new \Exception('Connexion impossible au serveur ldap ' . $this-uri . ' avec l\'utilisateur ' . $this->bindDN . ' ' . $this->password . '.');
+        }
+        $this->logger->info('Connexion au serveur ldap ' . $this->uri . ' avec l\'utilisateur ' . $this->bindDN . ' .');
         return $r;
     }
 
@@ -164,7 +194,13 @@ class LdapEntityManager
             $value  = $instance->$getter();
             if($value == null) {
                 if($instanceMetadataCollection->isSequence($instanceMetadataCollection->getKey($varname))) {
-                    $value = (int) $this->generateSequenceValue($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)));
+
+                    $sequence = $this->renderString($instanceMetadataCollection->getSequence($instanceMetadataCollection->getKey($varname)), array(
+                        'entity' => $instance,
+                        'baseDN' => $this->baseDN,
+                    ));
+
+                    $value = (int) $this->generateSequenceValue($sequence);
                     $instance->$setter($value);
                 }
             }
@@ -184,19 +220,21 @@ class LdapEntityManager
                 } else {
                     $arrayInstance[$varname] = $this->buildEntityDn($value);
                 }
-            } elseif(is_array($value) && !empty($value) && is_object($value[0])) {
-                $valueArray = array();
-                foreach($value as $val) {
-                    $valueArray[] = $this->buildEntityDn($val);
-                }
-                $arrayInstance[$varname] = $valueArray;
+            } elseif(is_array($value) && !empty($value) && isset($value[0]) && is_object($value[0])) {
+                    $valueArray = array();
+                    foreach($value as $val) {
+                        $valueArray[] = $this->buildEntityDn($val);
+                    }
+                    $arrayInstance[$varname] = $valueArray;
             } elseif(strtolower($varname) == "userpassword") {
-                if($this->isSha1($value)) {
-                    $hash = pack("H*", $value);
-                    $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
-                    $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                if(!is_array($value)) {
+                    if($this->isSha1($value)) {
+                        $hash = pack("H*", $value);
+                        $arrayInstance[$varname] = '{SHA}' . base64_encode($hash);
+                        $this->logger->info(sprintf("convert %s to %s", $value, $arrayInstance[$varname]));
+                    }
                 }
-            } else {
+            }  else {
                 $arrayInstance[$varname] = $value;
             }
         }
@@ -234,7 +272,7 @@ class LdapEntityManager
 
         return $this->renderString($dnModel, array(
                 'entity' => $instance,
-                'rootDN' => $this->rootDN,
+                'baseDN' => $this->baseDN,
                 ));
     }
 
@@ -278,6 +316,9 @@ class LdapEntityManager
      */
     public function deleteByDn($dn, $recursive=false)
     {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Delete (recursive=' . $recursive . ') in LDAP: ' . $dn );
 
         if($recursive == false) {
@@ -332,6 +373,9 @@ class LdapEntityManager
      */
     private function ldapPersist($dn, Array $arrayInstance)
     {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Insert into LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_add($this->ldapResource, $dn, $arrayInstance);
     }
@@ -343,7 +387,10 @@ class LdapEntityManager
      * @param array        $arrayInstance
      */
     private function ldapUpdate($dn, Array $arrayInstance)
-    {  
+    {
+        // Connect if needed
+        $this->connect();
+
         $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
         ldap_modify($this->ldapResource, $dn, $arrayInstance);
     }
@@ -358,7 +405,10 @@ class LdapEntityManager
      * @return array
      */
     public function retrieveByDn($dn, $entityName, $max = 100, $objectClass = "*")
-    {  
+    {
+        // Connect if needed
+        $this->connect();
+
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
@@ -394,11 +444,15 @@ class LdapEntityManager
      */
     public function retrieve(LdapFilter $filter, $entityName, $max = 100)
     {
+        // Connect if needed
+        $this->connect();
+
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $data = array();
+        $this->logger->info(sprintf("request on ldap root:%s with filter:%s", $this->baseDN, $filter->format('ldap')));
         $sr = ldap_search($this->ldapResource,
-            $this->rootDN,
+            $this->baseDN,
             $filter->format('ldap'),
             array_values($instanceMetadataCollection->getMetadatas()),
             0
@@ -450,9 +504,19 @@ class LdapEntityManager
                 try {
                     $setter = 'set' . ucfirst($varname);
                     if(strtolower($attributes) == "userpassword") {
-                        $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
-                        $string = base64_decode($value);
-                        $entity->$setter(bin2hex($string));
+                        if(count($array[strtolower($attributes)]) > 2) {
+                            unset($array[strtolower($attributes)]["count"]);
+                            $password = array();
+                            foreach($array[strtolower($attributes)] as $value) {
+                                $string = base64_decode($value);
+                                $password[] = bin2hex($string);
+                            }
+                            $entity->$setter($password);
+                        } else {
+                            $value = str_replace("{SHA}", "", $array[strtolower($attributes)][0]);
+                            $string = base64_decode($value);
+                            $entity->$setter(bin2hex($string));
+                        }
                     } elseif(preg_match('/^\d{14}/', $array[strtolower($attributes)][0])) {
                         $datetime = Converter::fromLdapDateTime($array[strtolower($attributes)][0], false);
                         $entity->$setter($datetime);
@@ -489,6 +553,9 @@ class LdapEntityManager
 
     private function generateSequenceValue($dn)
     {
+        // Connect if needed
+        $this->connect();
+
         $sr = ldap_search($this->ldapResource,
             $dn,
             '(objectClass=integerSequence)'

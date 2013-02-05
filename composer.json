@@ -11,7 +11,15 @@
         }
     ],
     "require": {
-        "php": ">=5.3.2"
+        "php": ">=5.3.2",
+        "symfony/http-kernel": "2.1.*",
+        "symfony/dependency-injection": "2.1.*",
+        "symfony/framework-bundle": "2.1.*",
+        "symfony/class-loader": "2.1.*",
+        "symfony/yaml": "2.1.*",
+        "symfony/monolog-bundle": "2.1.*",
+        "symfony/twig-bundle": "2.1.*",
+        "r1pp3rj4ck/TwigstringBundle": "dev-master"
     },
     "autoload": {
         "psr-0": { "Gorg\\Bundle\\LdapOrmBundle": "" }

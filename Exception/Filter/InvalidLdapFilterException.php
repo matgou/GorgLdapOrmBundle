@@ -18,15 +18,7 @@
  * Foundation, Inc.,                                                       *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                   *
  ***************************************************************************/
- 
-namespace Gorg\Bundle\LdapOrmBundle\Annotation\Ldap;
 
-/**
- * Annotation to describe an regex fetching an attribute
- * 
- * @Annotation
- * @author Mathieu GOULIN <mathieu.goulin@gadz.org>
- */
-final class DnPregMatch extends BaseAnnotation
-{
-}
+namespace Gorg\Bundle\LdapOrmBundle\Exception\Filter;
+
+class InvalidLdapFilterException extends \Exception { } 

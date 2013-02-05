@@ -1,19 +1,32 @@
 <?xml version="1.0" ?>
-
+<!--
+/***************************************************************************
+ * Copyright (C) 1999-2012 Gadz.org                                        *
+ * http://opensource.gadz.org/                                             *
+ *                                                                         *
+ * This program is free software; you can redistribute it and/or modify    *
+ * it under the terms of the GNU General Public License as published by    *
+ * the Free Software Foundation; either version 2 of the License, or       *
+ * (at your option) any later version.                                     *
+ *                                                                         *
+ * This program is distributed in the hope that it will be useful,         *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+ * GNU General Public License for more details.                            *
+ *                                                                         *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program; if not, write to the Free Software             *
+ * Foundation, Inc.,                                                       *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                   *
+ ***************************************************************************/
+ -->
 <container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="gorg_ldap.host">%host%</parameter>
-        <parameter key="gorg_ldap.port">%port%</parameter>
-        <parameter key="gorg_ldap.user">%user%</parameter>
-        <parameter key="gorg_ldap.passwd">%passwd%</parameter>
-        <parameter key="gorg_ldap.root">%root%</parameter>
-    
         <parameter key="gorg_ldap_orm.entity_manager.class">Gorg\Bundle\LdapOrmBundle\Ldap\LdapEntityManager</parameter>
         <parameter key="gorg_ldap_orm.twig_extention.class">Gorg\Bundle\LdapOrmBundle\Twig\Extension\LdapFilter</parameter>
-
     </parameters>
 
     <services>
@@ -21,11 +34,7 @@
             <argument type="service" id="logger" />
             <argument type="service" id="twig2" />
             <argument type="service" id="annotation_reader" />
-            <argument>%gorg_ldap.host%</argument>
-            <argument>%gorg_ldap.port%</argument>
-            <argument>%gorg_ldap.user%</argument>
-            <argument>%gorg_ldap.passwd%</argument>
-            <argument>%gorg_ldap.root%</argument>
+            <argument>%gorg_ldap_orm.config%</argument>
         </service>
     </services>
 </container>

@@ -1,5 +1,24 @@
 <?php
-
+/***************************************************************************
+ * Copyright (C) 1999-2012 Gadz.org                                        *
+ * http://opensource.gadz.org/                                             *
+ *                                                                         *
+ * This program is free software; you can redistribute it and/or modify    *
+ * it under the terms of the GNU General Public License as published by    *
+ * the Free Software Foundation; either version 2 of the License, or       *
+ * (at your option) any later version.                                     *
+ *                                                                         *
+ * This program is distributed in the hope that it will be useful,         *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+ * GNU General Public License for more details.                            *
+ *                                                                         *
+ * You should have received a copy of the GNU General Public License       *
+ * along with this program; if not, write to the Free Software             *
+ * Foundation, Inc.,                                                       *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                   *
+ ***************************************************************************/
+ 
 namespace Gorg\Bundle\LdapOrmBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -22,11 +41,8 @@ class GorgLdapOrmExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('host', $config['host']);
-        $container->setParameter('port', $config['port']);
-        $container->setParameter('user', $config['user']);
-        $container->setParameter('passwd', $config['passwd']);
-        $container->setParameter('root', $config['root']);
+        // Make the configuration available as a parameter
+        $container->setParameter('gorg_ldap_orm.config', $config);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
