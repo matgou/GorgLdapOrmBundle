@@ -112,7 +112,10 @@ class Repository
             $attribute = $this->class->getMeta($varname);
         }
         if (!isset($allFilters[$key = base64_encode($attribute . $value)])) {
-            $allFilters[$key] = new LdapFilter(array($attribute => $value));
+            $allFilters[$key] = new LdapFilter(array(
+                $attribute => $value,
+                'objectClass' => $this->class->getObjectClass(),
+            ));
         }
         return $allFilters[$key];
     }
