@@ -511,13 +511,26 @@ class LdapEntityManager
         return $this->iterator;
     }
 
+    public function cleanArray($array)
+    {  
+        $newArray = array();
+        foreach(array_keys($array) as $key) {
+            $newArray[strtolower($key)] = $array[$key];
+        }
+
+        return $newArray;
+    }
+
     public function arrayToObject($entityName, $array)
-    {
+    {  
+        $this->logger->info(sprintf('Convert ldap result : %s to object', serialize($array)));
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
-       
-        $dn = $array['dn']; 
+
+        $array = $this->cleanArray($array);
+        $dn = $array['dn'];
         $entity = new $entityName();
         foreach($instanceMetadataCollection->getMetadatas() as $varname => $attributes) {
+            $attributes = strtolower($attributes);
             if($instanceMetadataCollection->isArrayOfLink($varname))
             {
                 $entityArray = array();
