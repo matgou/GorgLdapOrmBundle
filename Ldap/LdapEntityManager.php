@@ -523,7 +523,6 @@ class LdapEntityManager
 
     public function arrayToObject($entityName, $array)
     {  
-        $this->logger->info(sprintf('Convert ldap result : %s to object', serialize($array)));
         $instanceMetadataCollection = $this->getClassMetadata($entityName);
 
         $array = $this->cleanArray($array);

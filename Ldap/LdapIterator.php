@@ -112,7 +112,6 @@ class LdapIterator implements \Iterator
         $this->pos++;
         if (!$this->valid()) return false;
 
-        $this->pos++;
         $this->currentElement = $this->entityManager->doRawLdapNextEntry($this->currentElement);
         return $this->current();
     }
