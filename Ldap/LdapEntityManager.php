@@ -35,6 +35,7 @@ use Gorg\Bundle\LdapOrmBundle\Repository\Repository;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Filter\LdapFilter;
 use Gorg\Bundle\LdapOrmBundle\Ldap\Converter;
 use Gorg\Bundle\LdapOrmBundle\Components\GenericIterator;
+use Gorg\Bundle\LdapOrmBundle\Entity\DateTimeDecorator;
 use Doctrine\Common\Annotations\Reader;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -216,10 +217,13 @@ class LdapEntityManager
             }
 
             if(is_object($value)) {
-                if($value instanceof \DateTime)
-                {
+                if ($value instanceof \DateTime) {
                     $arrayInstance[$varname] = Converter::toLdapDateTime($value, false);
-                } else {
+                }
+                elseif ($value instanceof DateTimeDecorator) {
+                    $arrayInstance[$varname] = $value;
+                }
+                else {
                     $arrayInstance[$varname] = $this->buildEntityDn($value);
                 }
             } elseif(is_array($value) && !empty($value) && isset($value[0]) && is_object($value[0])) {
@@ -385,6 +389,25 @@ class LdapEntityManager
     }
 
     /**
+     * Splits modified and removed attributes and make sure they are compatible with ldap_modify
+     *
+     * @param array        $array
+     * 
+     * @return array
+     */
+    private function splitArrayForUpdate($array)
+    {
+        $toModify = array_filter($array, function ($elm) {return is_array($elm) || strlen($elm);}); // removes NULL, FALSE and '' ; keeps everything else (like 0's)
+        $toSuppress = array_fill_keys(array_keys(array_diff_key($array, $toModify)), array());
+        foreach ($toModify as &$val) {
+            if (is_array($val)) {
+                list($val,) = $this->splitArrayForUpdate($val); // Multi-dimensional arrays are also fixed
+            }
+        }
+        return array(array_merge($toModify), array_merge($toSuppress)); // array_merge is to re-index gaps in keys
+    }
+    
+    /**
      * Update an object in ldap with array
      *
      * @param unknown_type $dn
@@ -395,8 +418,20 @@ class LdapEntityManager
         // Connect if needed
         $this->connect();
 
-        $this->logger->info('Modify in LDAP: ' . $dn . ' ' . serialize($arrayInstance));
-        ldap_modify($this->ldapResource, $dn, array_filter($arrayInstance, function ($element) { return is_scalar($element) || is_array($element); } ));
+        list($toModify, $toSuppress) = $this->splitArrayForUpdate($arrayInstance);
+        
+        if (!empty($toModify)) {
+            $this->logger->info("Modify $dn in LDAP : " . json_encode($toModify));
+            ldap_modify($this->ldapResource, $dn, $toModify);
+        }
+        if (!empty($toSuppress)) {
+            $this->logger->info("Suppress from $dn these attributs in LDAP : " . json_encode($toSuppress));
+            try {
+                ldap_mod_del($this->ldapResource, $dn, $toSuppress);
+            }
+            catch(\Exception $e) {
+            }
+        }
     }
 
     /**

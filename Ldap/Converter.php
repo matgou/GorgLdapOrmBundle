@@ -21,22 +21,25 @@
  
 namespace Gorg\Bundle\LdapOrmBundle\Ldap;
 
+use Gorg\Bundle\LdapOrmBundle\Entity\DateTimeDecorator;
+
 /**
  * Converter for LDAP
  * 
  * @author Mathieu GOULIN <mathieu.goulin@gadz.org>
+ *         DateTimeDecorator Modifications by Eric Bourderau <eric.bourderau@soce.fr>
  */
 class Converter
 {
 
     /**
-     * Convert an LDAP-Generalized-Time-entry into a DateTime-Object
+     * Convert an LDAP-Generalized-Time-entry into a DateTimeDecorator-Object
      *
-     * CAVEAT: The DateTime-Object returned will always be set to UTC-Timezone.
+     * CAVEAT: The DateTimeDecorator-Object returned will always be set to UTC-Timezone.
      *
      * @param string $date The generalized-Time
-     * @param boolean $asUtc Return the DateTime with UTC timezone
-     * @return DateTime
+     * @param boolean $asUtc Return the DateTimeDecorator with UTC timezone
+     * @return DateTimeDecorator
      * @throws Exception\InvalidArgumentException if a non-parseable-format is given
      */
     public static function fromLdapDateTime($date, $asUtc = true)
@@ -135,7 +138,7 @@ class Converter
             }
         }
 
-        // Raw-Data is present, so lets create a DateTime-Object from it.
+        // Raw-Data is present, so lets create a DateTimeDecorator-Object from it.
         $offset = $time['offdir']
                       . str_pad($time['offsethours'], 2, '0', STR_PAD_LEFT)
                       . str_pad($time['offsetminutes'], 2, '0', STR_PAD_LEFT);
@@ -148,7 +151,7 @@ class Converter
                       . $time['offdir']
                       . str_pad($time['offsethours'], 2, '0', STR_PAD_LEFT)
                       . str_pad($time['offsetminutes'], 2, '0', STR_PAD_LEFT);
-        $date = new \DateTime($timestring);
+        $date = new DateTimeDecorator($timestring);
         if ($asUtc) {
             $date->setTimezone(new \DateTimeZone('UTC'));
         }
@@ -160,35 +163,30 @@ class Converter
      * Converts a date-entity to an LDAP-compatible date-string
      *
      * The date-entity <var>$date</var> can be either a timestamp, a
-     * DateTime Object, a string that is parseable by strtotime().
+     * DateTimeDecorator Object, a string that is parseable by strtotime().
      *
-     * @param integer|string|DateTime $date The date-entity
+     * @param integer|string|DateTime|DateTimeDecorator $date The date-entity
      * @param boolean $asUtc Whether to return the LDAP-compatible date-string as UTC or as local value
      * @return string
      * @throws Exception\InvalidArgumentException
      */
     public static function toLdapDateTime($date, $asUtc = true)
     {
-        if (!($date instanceof \DateTime)) {
+        if (!($date instanceof \DateTime) && !($date instanceof DateTimeDecorator)) {
             if (is_int($date)) {
-                $date = new DateTime('@' . $date);
-                $date->setTimezone(new DateTimeZone(date_default_timezone_get()));
+                $date = new DateTimeDecorator('@' . $date);
+                $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             } elseif (is_string($date)) {
-                $date = new DateTime($date);
+                $date = new DateTimeDecorator($date);
             } else {
                 throw new Exception('Parameter $date is not of the expected type');
             }
         }
-        $timezone = $date->format('O');
         if (true === $asUtc) {
             $date->setTimezone(new \DateTimeZone('UTC'));
-            $timezone = 'Z';
-        }
-        if ('+0000' === $timezone) {
-            $timezone = 'Z';
         }
 
-        return $date->format('YmdHis') . $timezone;
+        return $date; // DateTimeDecorator has __toString magic method
     }
 
 }
