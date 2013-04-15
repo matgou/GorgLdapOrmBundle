@@ -221,7 +221,7 @@ class LdapEntityManager
                     $arrayInstance[$varname] = Converter::toLdapDateTime($value, false);
                 }
                 elseif ($value instanceof DateTimeDecorator) {
-                    $arrayInstance[$varname] = $value;
+                    $arrayInstance[$varname] = (string)$value;
                 }
                 else {
                     $arrayInstance[$varname] = $this->buildEntityDn($value);
@@ -383,13 +383,15 @@ class LdapEntityManager
     {
         // Connect if needed
         $this->connect();
+        
+        list($toInsert,) = $this->splitArrayForUpdate($arrayInstance);
 
-        $this->logger->info('Insert into LDAP: ' . $dn . ' ' . serialize($arrayInstance));
-        ldap_add($this->ldapResource, $dn, $arrayInstance);
+        $this->logger->info("Insert $dn in LDAP : " . json_encode($toInsert));
+        ldap_add($this->ldapResource, $dn, $toInsert);
     }
 
     /**
-     * Splits modified and removed attributes and make sure they are compatible with ldap_modify
+     * Splits modified and removed attributes and make sure they are compatible with ldap_modify & insert
      *
      * @param array        $array
      * 
@@ -397,11 +399,17 @@ class LdapEntityManager
      */
     private function splitArrayForUpdate($array)
     {
-        $toModify = array_filter($array, function ($elm) {return is_array($elm) || strlen($elm);}); // removes NULL, FALSE and '' ; keeps everything else (like 0's)
+        $toModify = array_filter($array, function ($elm) {return !is_null($elm) && $elm!==false && $elm!=='';}); // removes NULL, FALSE and '' ; keeps everything else (like 0's)
         $toSuppress = array_fill_keys(array_keys(array_diff_key($array, $toModify)), array());
         foreach ($toModify as &$val) {
             if (is_array($val)) {
                 list($val,) = $this->splitArrayForUpdate($val); // Multi-dimensional arrays are also fixed
+            }
+            elseif(is_string($val)) {
+                $val = utf8_encode($val);
+            }
+            elseif($val instanceof \Datetime) { // It shouldn't happen, but tests did reveal such cases
+                $val = new DateTimeDecorator($val);
             }
         }
         return array(array_merge($toModify), array_merge($toSuppress)); // array_merge is to re-index gaps in keys

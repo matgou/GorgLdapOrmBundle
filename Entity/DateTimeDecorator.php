@@ -45,10 +45,15 @@ class DateTimeDecorator
 
     /**
      * Decorator of a DateTime object (adding __toString() and setFormat method)
-     * @param type $datetime
+     * @param  string|DateTime  $datetime
      */
     public function __construct($datetime) {
-        $this->_instance = new \DateTime($datetime);
+        if ($datetime instanceof \DateTime) {
+            $this->_instance = $datetime;
+        }
+        else {
+            $this->_instance = new \DateTime($datetime);
+        }
     }
 
     public function __call($method, $args) {

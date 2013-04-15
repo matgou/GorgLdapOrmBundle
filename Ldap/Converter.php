@@ -176,7 +176,7 @@ class Converter
             if (is_int($date)) {
                 $date = new DateTimeDecorator('@' . $date);
                 $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            } elseif (is_string($date)) {
+            } elseif (is_string($date) || $date instanceof \DateTime) {
                 $date = new DateTimeDecorator($date);
             } else {
                 throw new Exception('Parameter $date is not of the expected type');
