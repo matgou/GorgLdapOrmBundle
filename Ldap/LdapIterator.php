@@ -30,6 +30,7 @@ class LdapIterator implements \Iterator
     private $currentElement;
     private $entityName;
     private $filter;
+    private $forceBadEntityName;
 
     /**
      * Build the iterator entity
@@ -37,11 +38,12 @@ class LdapIterator implements \Iterator
      * @param string            $entityName the type (full class name with namespace) of entity to fetch
      * @param LdapEntityManager $entityManager the ldap entity manager
      */
-    public function __construct (LdapFilter $filter, $entityName, LdapEntityManager $entityManager) {
+    public function __construct (LdapFilter $filter, $entityName, LdapEntityManager $entityManager, $forceBadEntityName = false) {
         $this->entityManager = $entityManager;
         $this->filter        = $filter;
         $this->entityName    = $entityName;
         $this->pos    = 0;
+        $this->forceBadEntityName = $forceBadEntityName;
     }
 
     /**
@@ -113,7 +115,15 @@ class LdapIterator implements \Iterator
         if (!$this->valid()) return false;
 
         $this->currentElement = $this->entityManager->doRawLdapNextEntry($this->currentElement);
-        return $this->current();
+        if($this->forceBadEntityName) {
+            return $this->current();
+        }
+
+        if($this->currentElement instanceof $this->entityName) {
+            return $this->current();
+        } else {
+            return $this->next();
+        }
     }
 
     /**
