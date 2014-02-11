@@ -119,7 +119,7 @@ class LdapIterator implements \Iterator
             return $this->current();
         }
 
-        if($this->currentElement instanceof $this->entityName) {
+        if($this->current() instanceof $this->entityName) {
             return $this->current();
         } else {
             return $this->next();
