@@ -209,6 +209,21 @@ class Repository
     }
 
     /**
+     * Return list of objects with corresponding criteria with and operators
+     *
+     * @param unknown type $array
+     */
+    public function findByAnd(Array $array)
+    {
+        $ldapAttributes = array();
+        foreach($array as $varname => $value) {
+            $ldapAttributes[$this->class->getMeta($varname)] = $value;
+        }
+        $filter = new LdapFilter($ldapAttributes, "AND");
+        return $this->em->retrieve($filter, $this->entityName);
+    }
+
+    /**
      * Return an object with corresponding varname as Criteria
      * 
      * @param unknown type $varname
