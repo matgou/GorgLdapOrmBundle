@@ -240,6 +240,29 @@ class Repository
     }
 
     /**
+     * Return an object with corresponding array with filter OR
+     *
+     * @param unknown type $varname
+     * @param unknown_type $value
+     */
+
+    public function findOneByOr(Array $array)
+    {
+        $ldapAttributes = array();
+        foreach($array as $varname => $value) {
+            $ldapAttributes[$this->class->getMeta($varname)] = $value;
+        }
+        $filter = new LdapFilter($ldapAttributes, "OR");
+        $arrayOfEntity = $this->em->retrieve($filter, $this->entityName, 1);
+        if (isset($arrayOfEntity[0])) {
+            return $arrayOfEntity[0];
+        }
+
+        return null;
+    }
+
+
+    /**
      * Return an object with corresponding varname as Criteria
      * 
      * @param unknown type $varname
