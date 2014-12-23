@@ -8,8 +8,9 @@ Installation
 
 1. Add this bundle to your project in composer.json:
 
-    1.1. Plain LdapOrgBundle
-        symfony 2.1 uses composer (http://www.getcomposer.org) to organize dependencies:
+1.1. Plain LdapOrgBundle
+
+- Symfony 2.1 uses composer (http://www.getcomposer.org) to organize dependencies:
 
 ```json
    {
@@ -19,7 +20,7 @@ Installation
    }
 ```
 
-    1.2. Declare the use of LdapOrgBundle
+1.2. Declare the use of LdapOrgBundle
 
 ```php
 // application/ApplicationKernel.php
@@ -34,7 +35,7 @@ public function registerBundles()
 }
 ```
 
-    1.3. Configure the ldap parameters
+1.3. Configure the ldap parameters
 
 ```yaml
 gorg_ldap_orm:
