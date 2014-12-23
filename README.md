@@ -1,16 +1,16 @@
-GorgLdapOrgBundle
+GorgLdapOrmBundle
 ===================
 
-GorgLdapOrgBundle is a Interface to retrive, modify or persist entities into an LDAP using php ldap native function.
+GorgLdapOrmBundle is a Interface to retrieve, modify or persist entities from/to an LDAP server, using PHP's native LDAP functions.
 
 Installation
 ------------
 
-1. Add this bundle to your project in composer.json:
+Add this bundle to your project in `composer.json`:
 
-1.1. Plain LdapOrgBundle
+1.1. Plain `GorgLdapOrmBundle`
 
-- Symfony 2.1 uses composer (http://www.getcomposer.org) to organize dependencies:
+Symfony 2.1 uses [Composer](http://www.getcomposer.org) to organize dependencies:
 
 ```json
    {
@@ -20,7 +20,7 @@ Installation
    }
 ```
 
-1.2. Declare the use of LdapOrgBundle
+1.2. Declare the use of `GorgLdapOrmBundle`
 
 ```php
 // application/ApplicationKernel.php
@@ -35,7 +35,7 @@ public function registerBundles()
 }
 ```
 
-1.3. Configure the ldap parameters
+1.3. Configure the LDAP parameters
 
 ```yaml
 gorg_ldap_orm:
@@ -49,12 +49,13 @@ gorg_ldap_orm:
         password_type: sha1
 ```
 
-    Sha1 is the default hashing method. In some cases (such as OpenLdap) the password is hashed server-side, if this is the case then change ```pasword_type``` to ```plaintext```
+Sha1 is the default hashing method. In some cases (such as OpenLdap) the password is hashed server-side,
+if this is the case then change `password_type` to `plaintext`.
 
 Basic Usage
 -----------
 
-To use the ldapOrmBundle you have to add annotation in entity like this exemple :
+To use the GorgLdapOrmBundle you have to add annotation to an entity like this example:
 
 ```php
 namespace Gorg\Bundle\Application\Entity;
@@ -170,8 +171,8 @@ class Account
 * ObjectClass : Use this annotation to attribute to a php entity class an ldapObjectClass
 * Dn : Use this annotation to build the dn with twig syntaxe
 * Sequence : Use this annotation to define a link with an ldap Sequence Object
-* ArrayField : This annotation defined an attribute is multi-valued as an array
-* DnPregMatch : This annotation calculate the value of attribute with a regular expression on DN
+* ArrayField : This annotation defines an attribute is multi-valued as an array
+* DnPregMatch : This annotation calculates the value of attribute with a regular expression on DN
 
 After you can use entity like this example:
 
@@ -192,7 +193,7 @@ $a = $repo->findOneByUid('john.doo');
 Advanced Usage
 --------------
 
-On can use the @DnLinkArray annotation to map a field and an other ldap objec
+On can use the @DnLinkArray annotation to map a field and an other ldap object
 
 ```php
 namespace Gorg\Bundle\Application\Entity;
@@ -344,7 +345,7 @@ class Group
 }
 ```
 
-After you can use entity like this example:
+After you can use the entity like this example:
 
 ```php
 $a = new Account();
