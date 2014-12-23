@@ -1,7 +1,7 @@
 GorgLdapOrmBundle
 ===================
 
-GorgLdapOrmBundle is a Interface to retrieve, modify or persist entities from/to an LDAP server, using PHP's native LDAP functions.
+GorgLdapOrmBundle is a Interface to retrieve, modify an persist entities from/to a LDAP server, using PHP's native LDAP functions.
 
 Installation
 ------------
