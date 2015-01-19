@@ -406,7 +406,7 @@ class LdapEntityManager
                 list($val,) = $this->splitArrayForUpdate($val); // Multi-dimensional arrays are also fixed
             }
             elseif(is_string($val)) {
-                $val = utf8_encode($val);
+                #$val = utf8_encode($val);
             }
             elseif($val instanceof \Datetime) { // It shouldn't happen, but tests did reveal such cases
                 $val = new DateTimeDecorator($val);
