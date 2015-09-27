@@ -3,7 +3,7 @@
     "type": "symfony-bundle",
     "description": "An Ldap ORM for Symfony2",
     "keywords": ["gorg", "orm", "ldap"],
-    "license": "GPL",
+    "license": "MIT",
     "authors": [
         {
             "name": "Mathieu GOULIN",
